@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "spiritum:block/hexstone_bricks_slab"
+    },
+    "type=double": {
+      "model": "spiritum:block/hexstone"
+    },
+    "type=top": {
+      "model": "spiritum:block/hexstone_bricks_slab_top"
+    }
+  }
+}

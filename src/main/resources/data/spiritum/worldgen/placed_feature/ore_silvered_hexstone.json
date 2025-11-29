@@ -1,0 +1,24 @@
+{
+  "feature": "spiritum:ore_silvered_hexstone",
+  "placement": [
+    {
+      "type": "minecraft:count_on_every_layer",
+      "count": 64
+    },
+    {
+      "type": "minecraft:height_range",
+      "height": {
+        "type": "minecraft:uniform",
+        "max_inclusive": {
+          "absolute": 64
+        },
+        "min_inclusive": {
+          "absolute": 0
+        }
+      }
+    },
+    {
+      "type": "minecraft:biome"
+    }
+  ]
+}

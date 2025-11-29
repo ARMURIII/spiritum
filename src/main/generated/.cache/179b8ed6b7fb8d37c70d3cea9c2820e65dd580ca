@@ -1,0 +1,4 @@
+// 1.21.1	2025-11-29T12:11:38.2004057	Spiritum/Tags for minecraft:block
+8232aad105305f31168c542aeb0fd17e25933b1e data\minecraft\tags\block\needs_stone_tool.json
+1aacf29bfab5e4c2e5ebdfc8aa71302f64f8cc1f data\minecraft\tags\block\mineable\pickaxe.json
+640d2be860ecefefa771407db80571aa427776a9 data\minecraft\tags\block\needs_iron_tool.json

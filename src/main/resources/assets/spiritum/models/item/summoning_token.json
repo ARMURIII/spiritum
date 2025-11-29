@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "spiritum:item/summoning_token",
+    "layer1": "spiritum:item/imp_rune"
+  }
+}

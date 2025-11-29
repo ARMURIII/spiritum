@@ -1,0 +1,33 @@
+package arr.armuriii.spiritum.init;
+
+import arr.armuriii.spiritum.Spiritum;
+import arr.armuriii.spiritum.entity.ImpEntity;
+import arr.armuriii.spiritum.rituals.Ritual;
+import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityAttachmentType;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.SpawnGroup;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
+import net.minecraft.util.math.Vec3d;
+
+public class SpiritumEntities {
+
+    public static final EntityType<ImpEntity> IMP = register(EntityType.Builder.create(ImpEntity::new,SpawnGroup.MISC)
+            .dimensions(0.7f,1)
+            .eyeHeight(0.8f)
+            .passengerAttachments(new Vec3d(0, 1.5625, 0))
+            .build("imp")
+            ,"imp");
+
+    public static void register() {
+        Spiritum.LOGGER.info("registered {} Entities",Spiritum.MOD_ID);
+
+        FabricDefaultAttributeRegistry.register(IMP,ImpEntity.createImpAttributes());
+    }
+
+    private static <T extends Entity> EntityType<T> register(EntityType<T> entity, String id) {
+        return Registry.register(Registries.ENTITY_TYPE, Spiritum.id(id), entity);
+    }
+}

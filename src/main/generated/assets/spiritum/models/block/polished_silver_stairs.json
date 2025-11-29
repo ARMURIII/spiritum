@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/stairs",
+  "textures": {
+    "bottom": "spiritum:block/polished_silver_block",
+    "side": "spiritum:block/polished_silver_block",
+    "top": "spiritum:block/polished_silver_block"
+  }
+}

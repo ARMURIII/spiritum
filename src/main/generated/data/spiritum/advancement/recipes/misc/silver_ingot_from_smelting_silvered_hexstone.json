@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_silvered_hexstone": {
+      "conditions": {
+        "items": [
+          {
+            "items": "spiritum:silvered_hexstone"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "spiritum:silver_ingot_from_smelting_silvered_hexstone"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_silvered_hexstone"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "spiritum:silver_ingot_from_smelting_silvered_hexstone"
+    ]
+  }
+}

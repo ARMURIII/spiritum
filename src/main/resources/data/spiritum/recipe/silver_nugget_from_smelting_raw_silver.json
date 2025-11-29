@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:smelting",
+  "category": "misc",
+  "cookingtime": 200,
+  "experience": 2.0,
+  "group": "silver_nugget",
+  "ingredient": {
+    "item": "spiritum:raw_silver"
+  },
+  "result": {
+    "count": 3,
+    "id": "spiritum:silver_nugget"
+  }
+}

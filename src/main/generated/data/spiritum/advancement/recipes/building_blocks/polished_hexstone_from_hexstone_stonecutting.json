@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_hexstone": {
+      "conditions": {
+        "items": [
+          {
+            "items": "spiritum:hexstone"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "spiritum:polished_hexstone_from_hexstone_stonecutting"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_hexstone"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "spiritum:polished_hexstone_from_hexstone_stonecutting"
+    ]
+  }
+}

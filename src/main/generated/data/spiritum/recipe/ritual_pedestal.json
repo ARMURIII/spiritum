@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "h": {
+      "item": "spiritum:hexstone"
+    },
+    "s": {
+      "item": "spiritum:silver_ingot"
+    }
+  },
+  "pattern": [
+    "ss",
+    "hh",
+    "hh"
+  ],
+  "result": {
+    "count": 1,
+    "id": "spiritum:ritual_pedestal"
+  }
+}

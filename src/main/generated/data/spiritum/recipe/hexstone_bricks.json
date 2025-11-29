@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "key": {
+    "h": {
+      "item": "spiritum:hexstone"
+    }
+  },
+  "pattern": [
+    "hh",
+    "hh"
+  ],
+  "result": {
+    "count": 4,
+    "id": "spiritum:hexstone_bricks"
+  }
+}

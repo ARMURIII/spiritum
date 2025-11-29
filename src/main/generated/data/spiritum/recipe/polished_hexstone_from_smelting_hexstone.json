@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:smelting",
+  "category": "blocks",
+  "cookingtime": 200,
+  "experience": 2.0,
+  "group": "hexstone",
+  "ingredient": {
+    "item": "spiritum:hexstone"
+  },
+  "result": {
+    "id": "spiritum:polished_hexstone"
+  }
+}

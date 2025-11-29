@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "f": {
+      "item": "spiritum:flesh_clump"
+    },
+    "w": {
+      "item": "minecraft:wheat"
+    }
+  },
+  "pattern": [
+    " w ",
+    "wfw",
+    " w "
+  ],
+  "result": {
+    "count": 1,
+    "id": "spiritum:poppet"
+  }
+}

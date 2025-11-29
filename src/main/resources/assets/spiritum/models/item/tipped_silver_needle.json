@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "spiritum:item/tipped_needle",
+    "layer1": "spiritum:item/tipped_needle_tint"
+  }
+}

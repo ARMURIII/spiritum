@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "i": {
+      "item": "spiritum:silver_ingot"
+    },
+    "n": {
+      "item": "spiritum:silver_nugget"
+    }
+  },
+  "pattern": [
+    "n",
+    "n",
+    "i"
+  ],
+  "result": {
+    "count": 8,
+    "id": "spiritum:silver_needle"
+  }
+}

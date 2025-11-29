@@ -1,0 +1,21 @@
+{
+  "required": true,
+  "package": "arr.armuriii.spiritum.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "AbstractFurnaceBlockEntityMixin",
+    "ComposterBlockMixin",
+    "CookingRecipeSerializerMixin",
+    "CropBlockMixin",
+    "MobEntityMixin",
+    "accessor.MinecraftServerAccessor",
+    "accessor.ServerWorldAccessor",
+    "accessor.StatusEffectInstanceAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "overwrites": {
+    "requireAnnotations": true
+	}
+}

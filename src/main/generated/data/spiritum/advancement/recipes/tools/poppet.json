@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_flesh_clump": {
+      "conditions": {
+        "items": [
+          {
+            "items": "spiritum:flesh_clump"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "spiritum:poppet"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_flesh_clump"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "spiritum:poppet"
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+accessWidener   v1	named
+
+accessible method net/minecraft/entity/effect/StatusEffect <init> (Lnet/minecraft/entity/effect/StatusEffectCategory;I)V
+accessible method net/minecraft/entity/effect/StatusEffect <init> (Lnet/minecraft/entity/effect/StatusEffectCategory;ILnet/minecraft/particle/ParticleEffect;)V
+accessible method net/minecraft/util/collection/DefaultedList <init> (Ljava/util/List;Ljava/lang/Object;)V
+accessible field net/minecraft/recipe/AbstractCookingRecipe ingredient Lnet/minecraft/recipe/Ingredient;
+accessible field net/minecraft/recipe/AbstractCookingRecipe result Lnet/minecraft/item/ItemStack;
