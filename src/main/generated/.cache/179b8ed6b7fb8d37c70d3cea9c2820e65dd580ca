@@ -1,4 +1,5 @@
-// 1.21.1	2025-11-29T12:11:38.2004057	Spiritum/Tags for minecraft:block
-8232aad105305f31168c542aeb0fd17e25933b1e data\minecraft\tags\block\needs_stone_tool.json
-1aacf29bfab5e4c2e5ebdfc8aa71302f64f8cc1f data\minecraft\tags\block\mineable\pickaxe.json
-640d2be860ecefefa771407db80571aa427776a9 data\minecraft\tags\block\needs_iron_tool.json
+// 1.21.1	2025-12-09T19:31:21.4365938	Spiritum/Tags for minecraft:block
+ff8cc4c4068377891acc2f5b874d092447675491 data\minecraft\tags\block\needs_stone_tool.json
+782f5ef73363fda778ae31adadab3c5ffbe66b57 data\minecraft\tags\block\mineable\pickaxe.json
+c627cc54603ae7c6041f552bc034cf2650affdc2 data\minecraft\tags\block\needs_iron_tool.json
+13e28ab389a890ccb96c60329a8756b47b51d08b data\minecraft\tags\block\walls.json

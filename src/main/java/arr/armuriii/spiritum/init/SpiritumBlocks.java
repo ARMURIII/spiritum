@@ -3,21 +3,22 @@ package arr.armuriii.spiritum.init;
 import arr.armuriii.spiritum.Spiritum;
 import arr.armuriii.spiritum.block.RitualPedestal;
 import arr.armuriii.spiritum.block.entity.RitualPedestalEntity;
-import net.fabricmc.fabric.api.item.v1.FabricItem;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.block.entity.CampfireBlockEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
-import net.minecraft.item.Items;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.tag.TagKey;
 import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
 
 public class SpiritumBlocks {
+
+    public static final TagKey<Block> HEXSTONES = TagKey.of(RegistryKeys.BLOCK, Spiritum.id("hexstones"));
 
     public static final Block HEXSTONE = register(new Block(AbstractBlock.Settings.copy(Blocks.ANDESITE)),"hexstone", new Item.Settings());
     public static final Block HEXSTONE_STAIRS = register(createStairs(HEXSTONE),"hexstone_stairs", new Item.Settings());
@@ -48,7 +49,8 @@ public class SpiritumBlocks {
 
 
 
-    public static final Block FLESH_BLOCK = register(new Block(AbstractBlock.Settings.create().strength(0.5F).sounds(BlockSoundGroup.HONEY).velocityMultiplier(0.5F).jumpVelocityMultiplier(0.5F).nonOpaque().mapColor(MapColor.DARK_RED)) {
+    public static final Block FLESH_BLOCK = register(new Block(AbstractBlock.Settings.create().strength(0.5F)
+            .sounds(BlockSoundGroup.CORAL).velocityMultiplier(0.5F).jumpVelocityMultiplier(0.5F).nonOpaque().mapColor(MapColor.DARK_RED)) {
         private static final VoxelShape SHAPE = Block.createCuboidShape(1, 0, 1, 15, 15, 15);
 
         @Override
@@ -60,7 +62,7 @@ public class SpiritumBlocks {
 
 
     public static final Block RITUAL_PEDESTAL = register(
-            new RitualPedestal(AbstractBlock.Settings.create().requiresTool().strength(3.5F).nonOpaque().mapColor(MapColor.DARK_RED)),"ritual_pedestal", new Item.Settings());
+            new RitualPedestal(AbstractBlock.Settings.create().requiresTool().strength(3.5F).solid().nonOpaque().mapColor(MapColor.DARK_RED)),"ritual_pedestal", new Item.Settings());
 
     public static final BlockEntityType<RitualPedestalEntity> RITUAL_PEDESTAL_BLOCK_ENTITY = Registry.register(
             Registries.BLOCK_ENTITY_TYPE,Spiritum.id("ritual_pedestal"), BlockEntityType.Builder.create(RitualPedestalEntity::new, RITUAL_PEDESTAL).build());

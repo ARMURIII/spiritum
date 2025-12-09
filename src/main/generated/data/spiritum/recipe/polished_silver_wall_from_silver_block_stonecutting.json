@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:stonecutting",
+  "ingredient": {
+    "item": "spiritum:silver_block"
+  },
+  "result": {
+    "count": 1,
+    "id": "spiritum:polished_silver_wall"
+  }
+}

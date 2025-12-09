@@ -2,30 +2,38 @@ package arr.armuriii.spiritum.init;
 
 
 import arr.armuriii.spiritum.Spiritum;
-import arr.armuriii.spiritum.block.entity.RitualPedestalEntity;
+import arr.armuriii.spiritum.entity.SpiritEntity;
 import arr.armuriii.spiritum.item.NeedleItem;
-import arr.armuriii.spiritum.mixin.accessor.StatusEffectInstanceAccessor;
+import dev.emi.trinkets.api.SlotReference;
+import dev.emi.trinkets.api.Trinket;
+import dev.emi.trinkets.api.TrinketItem;
+import dev.emi.trinkets.api.TrinketsApi;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
-import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
-import net.minecraft.block.Block;
-import net.minecraft.block.DispenserBlock;
-import net.minecraft.block.dispenser.DispenserBehavior;
-import net.minecraft.block.dispenser.ItemDispenserBehavior;
+import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.PotionContentsComponent;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.ContainerLock;
 import net.minecraft.item.*;
 import net.minecraft.item.tooltip.TooltipType;
+import net.minecraft.loot.LootPool;
+import net.minecraft.loot.condition.RandomChanceLootCondition;
+import net.minecraft.loot.entry.ItemEntry;
+import net.minecraft.loot.provider.number.UniformLootNumberProvider;
 import net.minecraft.potion.Potion;
-import net.minecraft.potion.Potions;
 import net.minecraft.registry.*;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.resource.featuretoggle.FeatureSet;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPointer;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.event.GameEvent;
 
 import java.util.List;
 
@@ -34,7 +42,7 @@ import static arr.armuriii.spiritum.init.SpiritumBlocks.*;
 public class SpiritumItems {
 
     public static final Item FLESH_CLUMP = register(new Item(new Item.Settings()),"flesh_clump");
-    public static final Item POPPET = register(new Item(new Item.Settings()),"poppet");
+    public static final Item POPPET = register(new Item(new Item.Settings().maxCount(1)),"poppet");
     public static final Item RAW_SILVER = register(new Item(new Item.Settings()),"raw_silver");
     public static final Item SILVER_INGOT = register(new Item(new Item.Settings()),"silver_ingot");
     public static final Item SILVER_NUGGET = register(new Item(new Item.Settings()),"silver_nugget");
@@ -51,9 +59,13 @@ public class SpiritumItems {
                     if (component != null && component.potion().isPresent())
 
                         for (StatusEffectInstance instance : component.getEffects()) {
-                            StatusEffectInstance copy = new StatusEffectInstance(instance);
-                            ((StatusEffectInstanceAccessor)copy).setDuration(instance.getDuration()/2);
-                            player.addStatusEffect(copy);
+                            player.addStatusEffect(new StatusEffectInstance(
+                                    instance.getEffectType(),
+                                    instance.mapDuration(duration -> duration/2),
+                                    instance.getAmplifier(),
+                                    instance.isAmbient(),
+                                    instance.shouldShowParticles()
+                            ));
                         }
                 }
             }
@@ -65,8 +77,56 @@ public class SpiritumItems {
             potionContentsComponent.buildTooltip(tooltip::add, 0.5F, context.getUpdateTickRate());
         }
     },"tipped_silver_needle");
-    public static final Item SPIRIT_BOTTLE = register(new Item(new Item.Settings()),"spirit_bottle");
+    public static final Item SPIRIT_BOTTLE = register(new Item(new Item.Settings()){
+        @Override
+        public ActionResult useOnBlock(ItemUsageContext context) {
+            if (context.getPlayer() != null) {
+                ItemStack stack = context.getStack();
+                stack.split(1);
+                if (stack.isEmpty())
+                    context.getPlayer().setStackInHand(context.getHand(),Items.GLASS_BOTTLE.getDefaultStack());
+                else
+                    context.getPlayer().giveItemStack(Items.GLASS_BOTTLE.getDefaultStack());
+                if (!context.getWorld().isClient()) {
+                    SpiritEntity spirit = SpiritumEntities.SPIRIT.create(context.getWorld());
+                    if (spirit != null) {
+                        spirit.setOwner(context.getPlayer());
+                        spirit.setPosition(context.getHitPos());
+                        context.getWorld().spawnEntity(spirit);
+                    }
+                }
+                context.getWorld().playSound(null,context.getPlayer().getBlockPos(),SoundEvents.ITEM_BOTTLE_EMPTY, SoundCategory.PLAYERS);
+                return ActionResult.success(context.getWorld().isClient());
+            }
+            return super.useOnBlock(context);
+        }
+    },"spirit_bottle");
+
+
     public static final Item SUMMONING_TOKEN = register(new Item(new Item.Settings().maxDamage(56)),"summoning_token");
+
+    public static final Item SUMMONING_HAT = register(new TrinketItem(new Item.Settings().maxCount(1)){
+        @Override
+        public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
+            super.appendTooltip(stack, context, tooltip, type);
+            tooltip.add(Text.translatable("item.spiritum.summoning_hat.tooltip").withColor(0x933333));
+        }
+
+        @Override
+        public RegistryEntry<SoundEvent> getEquipSound(ItemStack stack, SlotReference slot, LivingEntity entity) {
+            return SoundEvents.ITEM_ARMOR_EQUIP_LEATHER;
+        }
+        @Override
+        public void onUnequip(ItemStack stack, SlotReference ref, LivingEntity user) {
+            super.onUnequip(stack, ref, user);
+            Trinket trinket = TrinketsApi.getTrinket(stack.getItem());
+            RegistryEntry<SoundEvent> soundEvent = trinket.getEquipSound(stack, ref, user);
+            if (!stack.isEmpty() && soundEvent != null) {
+                user.emitGameEvent(GameEvent.EQUIP);
+                user.playSound(soundEvent.value(), 1.0F, 1.0F);
+            }
+        }
+    },"summoning_hat");
 
     public static final ItemGroup SPIRITUM_GROUP = FabricItemGroup.builder()
             .icon(() -> new ItemStack(SUMMONING_TOKEN))
@@ -100,24 +160,38 @@ public class SpiritumItems {
                 entries.add(POLISHED_SILVER_SLAB);
                 entries.add(POLISHED_SILVER_WALL);
                 entries.add(SILVER_NEEDLE);
+                entries.add(SUMMONING_HAT);
+            })
+            .build();
+
+    public static final ItemGroup TIPPED_NEEDLE_GROUP = FabricItemGroup.builder()
+            .icon(() -> new ItemStack(SILVER_NEEDLE))
+            .displayName(Text.translatable("itemGroup.spiritum.tipped_needle_group"))
+            .entries((context, entries) -> {
                 context.lookup().getOptionalWrapper(RegistryKeys.POTION).ifPresent((registryWrapper) ->
                     addPotions(entries, registryWrapper, TIPPED_SILVER_NEEDLE, ItemGroup.StackVisibility.PARENT_AND_SEARCH_TABS, context.enabledFeatures()));
             })
             .build();
 
+    private static final Identifier ANCIENT_CITY_CHEST_LOOT_TABLE_ID = Identifier.ofVanilla("chests/ancient_city");
+
     public static void register() {
         Spiritum.LOGGER.info("registered {} Items",Spiritum.MOD_ID);
         Registry.register(Registries.ITEM_GROUP, Spiritum.id("spiritum_group"), SPIRITUM_GROUP);
+        Registry.register(Registries.ITEM_GROUP, Spiritum.id("tipped_needle_group"), TIPPED_NEEDLE_GROUP);
 
-        DispenserBlock.registerBehavior(SPIRIT_BOTTLE, new ItemDispenserBehavior() {
-            @Override
-            protected ItemStack dispenseSilently(BlockPointer pointer, ItemStack stack) {
-                if (pointer.world().getBlockEntity(BlockPos.ofFloored(DispenserBlock.getOutputLocation(pointer))) instanceof RitualPedestalEntity pedestal) {
-                    stack.decrement(1);
-                    pedestal.addSoul(1);
-                    return stack;
-                }
-                return super.dispenseSilently(pointer, stack);
+        LootTableEvents.MODIFY.register((key, builder, source, lookup) -> {
+            if (ANCIENT_CITY_CHEST_LOOT_TABLE_ID.equals(key.getValue())) {
+                LootPool tokenPool = LootPool.builder()
+                        .rolls(UniformLootNumberProvider.create(0, 1))
+                        .conditionally(RandomChanceLootCondition.builder(1).build())
+                        .with(ItemEntry.builder(SUMMONING_TOKEN).build()).build();
+                LootPool silverPool = LootPool.builder()
+                        .rolls(UniformLootNumberProvider.create(0, 5))
+                        .conditionally(RandomChanceLootCondition.builder(1).build())
+                        .with(ItemEntry.builder(SILVER_INGOT).build()).build();
+                builder.pool(tokenPool);
+                builder.pool(silverPool);
             }
         });
     }

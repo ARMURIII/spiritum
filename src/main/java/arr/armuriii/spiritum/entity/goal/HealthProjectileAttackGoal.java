@@ -73,6 +73,9 @@ public class HealthProjectileAttackGoal extends Goal {
         this.target = null;
         this.seenTargetTicks = 0;
         this.updateCountdownTicks = -1;
+
+        if (this.mob instanceof ImpEntity imp)
+            imp.setHelpRequired(false);
     }
 
     public boolean shouldRunEveryTick() {
@@ -97,21 +100,20 @@ public class HealthProjectileAttackGoal extends Goal {
                     imp.setHelpRequired(false);
                 this.mob.getNavigation().stop();
             }else {
-                this.mob.getNavigation().startMovingAlong(this.fleePath, this.mobSpeed);
+                this.mob.getNavigation().startMovingAlong(this.fleePath,this.mob.hasVehicle() ? 1.0 : this.mobSpeed);
                 if (this.mob instanceof ImpEntity imp)
                     imp.setHelpRequired(true);
-            }
-        } else {
-            this.mob.getNavigation().startMovingTo(this.target, this.mobSpeed);
-            if (this.mob instanceof ImpEntity imp)
-                imp.setHelpRequired(true);
-        }
-
-        this.mob.getLookControl().lookAt(this.target, 30.0F, 30.0F);
-        if (--this.updateCountdownTicks == 0) {
-            if (!bl) {
                 return;
             }
+        } else {
+            this.mob.getNavigation().startMovingTo(this.target,this.mob.hasVehicle() ? 1.0 : this.mobSpeed);
+            if (this.mob instanceof ImpEntity imp)
+                imp.setHelpRequired(true);
+            return;
+        }
+
+        this.mob.getLookControl().lookAt(this.target, 45.0F, 45.0F);
+        if (--this.updateCountdownTicks == 0) {
 
             float f = (float)Math.sqrt(d) / this.maxShootRange;
             float g = MathHelper.clamp(f, 0.1F, 1.0F);

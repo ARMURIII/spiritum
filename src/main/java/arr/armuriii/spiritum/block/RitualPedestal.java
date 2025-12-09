@@ -1,8 +1,10 @@
 package arr.armuriii.spiritum.block;
 
+import arr.armuriii.spiritum.Spiritum;
 import arr.armuriii.spiritum.block.entity.RitualPedestalEntity;
 import arr.armuriii.spiritum.init.SpiritumBlocks;
 import arr.armuriii.spiritum.init.SpiritumItems;
+import arr.armuriii.spiritum.init.SpiritumParticles;
 import arr.armuriii.spiritum.init.SpiritumRituals;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
@@ -11,13 +13,17 @@ import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.ai.pathing.NavigationType;
 import net.minecraft.entity.decoration.ItemFrameEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.inventory.SidedInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.state.StateManager;
+import net.minecraft.state.property.BooleanProperty;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.ItemActionResult;
@@ -30,6 +36,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldAccess;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -40,11 +47,20 @@ public class RitualPedestal extends BlockWithEntity implements Waterloggable {
             RecordCodecBuilder.mapCodec((instance) ->
                     instance.group(createSettingsCodec()).apply(instance, RitualPedestal::new));
 
+    private static final BooleanProperty ACTIVE = Spiritum.ACTIVE;
+
 
     protected static final VoxelShape SHAPE = Block.createCuboidShape(1F, 0F, 1F, 15F, 16F, 15F);
 
     public RitualPedestal(Settings settings) {
         super(settings);
+        this.setDefaultState(this.stateManager.getDefaultState().with(ACTIVE, false));
+    }
+
+    @Override
+    protected void appendProperties(StateManager.Builder<Block, BlockState> builder) {
+        super.appendProperties(builder);
+        builder.add(ACTIVE);
     }
 
     protected BlockRenderType getRenderType(BlockState state) {
@@ -57,17 +73,31 @@ public class RitualPedestal extends BlockWithEntity implements Waterloggable {
             ItemStack itemStack = player.getStackInHand(hand);
             if (itemStack.isEmpty())
                 return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
-
             if (itemStack.isOf(SpiritumItems.SPIRIT_BOTTLE)) {
-                pedestal.addSoul(1);
-                if (itemStack.getCount() == 1) {
-                    player.setStackInHand(hand,new ItemStack(Items.GLASS_BOTTLE));
-                }else {
-                    player.giveItemStack(new ItemStack(Items.GLASS_BOTTLE));
-                    itemStack.decrement(1);
+                if (pedestal.hasValidRitual() && pedestal.getRitual() == SpiritumRituals.EMPTY) {
+                    if (itemStack.getCount() == 1)
+                        if (!player.isCreative())
+                            player.setStackInHand(hand,new ItemStack(Items.GLASS_BOTTLE));
+                    else {
+                        if (!player.isCreative())
+                            player.giveItemStack(new ItemStack(Items.GLASS_BOTTLE));
+                        itemStack.splitUnlessCreative(1,player);
+                    }
+                    pedestal.setRitual(pedestal.getValidRitual().orElse(null));
+                    pedestal.setOwner(player.getUuid());
+                    pedestal.getRitual().onApply(pedestal,player.getUuid());
+                    pedestal.setTime(world.getTime());
+                    world.playSound(null, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
+                            SoundEvents.BLOCK_RESPAWN_ANCHOR_SET_SPAWN, SoundCategory.BLOCKS, 1.0F, 1.0F);
                 }
-                world.playSound(null, (double)pos.getX() + (double)0.5F, (double)pos.getY() + (double)0.5F, (double)pos.getZ() + (double)0.5F,
-                        SoundEvents.BLOCK_RESPAWN_ANCHOR_CHARGE, SoundCategory.BLOCKS, 1.0F, 1.0F);
+
+                for(int s = 0; s < 20; ++s) {
+                    double t = (double)pos.getX() + 0.5 + (player.getRandom().nextDouble() - 0.5) * 2.0;
+                    double u = (double)pos.getY() + 0.5 + (player.getRandom().nextDouble() - 0.5) * 2.0;
+                    double v = (double)pos.getZ() + 0.5 + (player.getRandom().nextDouble() - 0.5) * 2.0;
+                    world.addParticle(SpiritumParticles.HEXFLAME_TYPE, t, u, v, 0, 0, 0);
+                }
+
                 return ItemActionResult.SUCCESS;
             } else if (pedestal.addStack(itemStack.splitUnlessCreative(1, player))) {
                 world.playSound(null, (double)pos.getX() + (double)0.5F, (double)pos.getY() + (double)0.5F, (double)pos.getZ() + (double)0.5F,
@@ -80,26 +110,24 @@ public class RitualPedestal extends BlockWithEntity implements Waterloggable {
     }
 
     @Override
+    protected boolean canPathfindThrough(BlockState state, NavigationType type) {
+        return false;
+    }
+
+    @Override
     protected ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, BlockHitResult hit) {
         if (player.getMainHandStack().isEmpty()) {
             BlockEntity blockEntity = world.getBlockEntity(pos);
             if (blockEntity instanceof RitualPedestalEntity pedestal) {
-                if (pedestal.hasValidRitual() && pedestal.getRitual() == SpiritumRituals.EMPTY) {
-                    pedestal.setRitual(pedestal.getValidRitual().orElse(null));
-                    pedestal.setOwner(player.getUuid());
-                    pedestal.getRitual().onApply(pedestal,player.getUuid());
-                    pedestal.setTime(world.getTime());
-                    world.playSound(null, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
-                            SoundEvents.BLOCK_RESPAWN_ANCHOR_SET_SPAWN, SoundCategory.BLOCKS, 1.0F, 1.0F);
-                }else if (pedestal.isActive()) {
-                    world.playSound(null, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
-                            SoundEvents.BLOCK_RESPAWN_ANCHOR_DEPLETE, SoundCategory.BLOCKS, 1.0F, 1.0F);
-                    pedestal.removeRitual();
-                }else if (player.isSneaking() && !pedestal.getItems().isEmpty() && pedestal.getLast() != null && pedestal.getRitual() == SpiritumRituals.EMPTY) {
+                if (player.isSneaking() && !pedestal.getItems().isEmpty() && pedestal.getLast() != null && pedestal.getRitual() == SpiritumRituals.EMPTY) {
                     world.playSound(null, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
                             SoundEvents.ENTITY_ITEM_FRAME_REMOVE_ITEM, SoundCategory.BLOCKS, 1.0F, 1.0F);
                     ItemScatterer.spawn(world, pos.getX(), pos.getY(), pos.getZ(), pedestal.getLast());
                     pedestal.removeLast();
+                }else if (pedestal.isActive() && !player.isSneaking()) {
+                    world.playSound(null, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
+                            SoundEvents.BLOCK_RESPAWN_ANCHOR_DEPLETE, SoundCategory.BLOCKS, 1.0F, 1.0F);
+                    pedestal.removeRitual();
                 } else return super.onUse(state, world, pos, player, hit);
 
                 return ActionResult.SUCCESS;

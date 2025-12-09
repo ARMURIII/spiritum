@@ -13,7 +13,7 @@ public class ImpRenderer extends MobEntityRenderer<ImpEntity, ImpModel<ImpEntity
     private static final Identifier TEXTURE = Spiritum.id("textures/entity/imp.png");
 
     public ImpRenderer(EntityRendererFactory.Context context) {
-        super(context, new ImpModel<>(context.getPart(SpiritumClient.IMP_LAYER)), 1F);
+        super(context, new ImpModel<>(context.getPart(SpiritumClient.IMP_LAYER)), 0.5F);
         this.addFeature(new ImpEmissiveFeatureRenderer<>(this));
     }
 

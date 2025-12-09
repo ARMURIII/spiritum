@@ -25,9 +25,12 @@
   "death.attack.hex.player": "%1$s was hexed by %2$s",
   "effect.spiritum.lethargy": "Lethargy",
   "entity.spiritum.imp": "Imp",
+  "entity.spiritum.spirit": "Spirit",
+  "entity.spiritum.spit": "Spit",
   "item.minecraft.lingering_potion.effect.lethargy": "Lingering Potion of Lethargy",
   "item.minecraft.potion.effect.lethargy": "Potion of Lethargy",
   "item.minecraft.splash_potion.effect.lethargy": "Splash Potion of Lethargy",
+  "item.minecraft.tipped_arrow.effect.lethargy": "Arrow of Lethargy",
   "item.spiritum.flesh_clump": "Flesh Clump",
   "item.spiritum.poppet": "Poppet",
   "item.spiritum.raw_silver": "Raw Silver",
@@ -35,7 +38,10 @@
   "item.spiritum.silver_needle": "Silver Needle",
   "item.spiritum.silver_nugget": "Silver Nugget",
   "item.spiritum.spirit_bottle": "Bottled Spirit",
+  "item.spiritum.summoning_hat": "Summoning Hat",
+  "item.spiritum.summoning_hat.tooltip": "25% increased Imp attack damage",
   "item.spiritum.summoning_token": "Summoning Token",
   "item.spiritum.tipped_silver_needle": "Tipped Silver Needle",
-  "itemGroup.spiritum.spiritum_group": "Spiritum"
+  "itemGroup.spiritum.spiritum_group": "Spiritum",
+  "itemGroup.spiritum.tipped_needle_group": "Tipped Needles"
 }

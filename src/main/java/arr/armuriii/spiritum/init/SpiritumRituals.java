@@ -4,6 +4,7 @@ import arr.armuriii.spiritum.Spiritum;
 import arr.armuriii.spiritum.block.entity.RitualPedestalEntity;
 import arr.armuriii.spiritum.entity.ImpEntity;
 import arr.armuriii.spiritum.rituals.Ritual;
+import arr.armuriii.spiritum.utils.MobSpawningLogic;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.item.ItemStack;
@@ -19,18 +20,14 @@ import java.util.UUID;
 
 public class SpiritumRituals {
 
-    public static final Ritual EMPTY = register(new Ritual(Ritual.Type.INSTANT, Ingredient.empty(),-1),"dummy");
+    public static final Ritual EMPTY = register(new Ritual(Ritual.Type.INSTANT, Ingredient.empty()),"dummy");
 
-    public static final Ritual WEATHER = register(new Ritual(Ritual.Type.INSTANT, Ingredient.ofItems(Items.NAUTILUS_SHELL),1) {
+    public static final Ritual WEATHER = register(new Ritual(Ritual.Type.INSTANT, Ingredient.ofItems(Items.NAUTILUS_SHELL)) {
         @Override
         public boolean onApply(RitualPedestalEntity pedestal, UUID owner) {
             if (pedestal.hasWorld()) {
                 World world = pedestal.getWorld();
                 if (world != null && world.getServer() != null) {
-                    /*long l = world.getTimeOfDay() + 24000L;
-                    if (world instanceof ServerWorld serverWorld) {
-                        serverWorld.setTimeOfDay(l - l % 24000L);
-                    }*/
                     world.getServer().getOverworld().setWeather(!world.isRaining() ? 20 : 0,
                             !world.isRaining() ? 0 : ServerWorld.RAIN_WEATHER_DURATION_PROVIDER.get(world.getServer().getOverworld().getRandom()),
                             !world.isRaining(),true);
@@ -42,7 +39,7 @@ public class SpiritumRituals {
         }
     },"weather_control");
 
-    public static final Ritual TIME = register(new Ritual(Ritual.Type.INSTANT, Ingredient.ofItems(Items.CLOCK),1) {
+    public static final Ritual TIME = register(new Ritual(Ritual.Type.INSTANT, Ingredient.ofItems(Items.CLOCK)) {
         @Override
         public boolean onApply(RitualPedestalEntity pedestal, UUID owner) {
             if (pedestal.hasWorld()) {
@@ -59,23 +56,27 @@ public class SpiritumRituals {
     },"time_control");
 
     public static final Ritual CONSECRATE_AREA = register(new Ritual(
-            Ritual.Type.LASTING, Ingredient.ofItems(SpiritumItems.SILVER_INGOT),1),"consecrate_area");
+            Ritual.Type.LASTING, Ingredient.ofItems(SpiritumItems.SILVER_INGOT)),"consecrate_area");
 
     public static final Ritual CAUSE_ABUNDANCE = register(new Ritual(
-            Ritual.Type.LASTING, Ingredient.ofItems(Items.BONE_BLOCK),1),"cause_abundance");
+            Ritual.Type.LASTING, Ingredient.ofItems(Items.BONE_BLOCK)),"cause_abundance");
 
     public static final Ritual CURSE_CREATURE = register(new Ritual(
-            Ritual.Type.INSTANT, Ingredient.ofItems(SpiritumItems.FLESH_CLUMP),1){
+            Ritual.Type.INSTANT, Ingredient.ofItems(SpiritumItems.FLESH_CLUMP)){
         @Override
         public boolean onApply(RitualPedestalEntity pedestal, UUID owner) {
             if (pedestal.getWorld() != null)
-                pedestal.getWorld().getEntitiesByClass(LivingEntity.class,Box.of(pedestal.getPos().toCenterPos(),16,16,16),(living)->true)
-                        .forEach(living -> living.addStatusEffect(new StatusEffectInstance(SpiritumPotions.LETHARGY,3*60*20)));
+                pedestal.getWorld().getEntitiesByClass(LivingEntity.class,Box.of(pedestal.getPos().toCenterPos(),16,16,16),(living)->true).forEach(
+                                living -> {
+                                    if (living.getUuid() != owner)
+                                        living.addStatusEffect(new StatusEffectInstance(SpiritumPotions.LETHARGY, 3 * 60 * 20));
+                                });
+
             return super.onApply(pedestal, owner);
         }
     },"curse_creature");
 
-    public static final Ritual IMPS = register(new Ritual(Ritual.Type.INSTANT, Ingredient.ofItems(SpiritumItems.SUMMONING_TOKEN),1) {
+    public static final Ritual IMPS = register(new Ritual(Ritual.Type.INSTANT, Ingredient.ofItems(SpiritumItems.SUMMONING_TOKEN)) {
         @Override
         public boolean onApply(RitualPedestalEntity pedestal, UUID owner) {
             if (pedestal.hasWorld()) {
@@ -85,8 +86,8 @@ public class SpiritumRituals {
                         ImpEntity imp = new ImpEntity(SpiritumEntities.IMP, world);
                         imp.setTamed(true,true);
                         imp.setOwnerUuid(owner);
-                        imp.setPosition(pedestal.getPos().toCenterPos().add(0, 1, 0));
-                        world.spawnEntity(imp);
+                        if (world instanceof ServerWorld serverWorld)
+                            MobSpawningLogic.spawnNearby(serverWorld,pedestal.getPos(),imp,SpiritumEntities.IMP,2,4);
                     }
 
                     ItemStack last = pedestal.getStackFromItem(SpiritumItems.SUMMONING_TOKEN).copy();
@@ -94,7 +95,6 @@ public class SpiritumRituals {
                         if (world instanceof ServerWorld serverWorld)
                             last.damage(1,serverWorld,null,(item)->{});
                         pedestal.replaceItem(SpiritumItems.SUMMONING_TOKEN,last);
-                        pedestal.removeSoul(this.getSpiritAmount());
                         return true;
                     }
                 }

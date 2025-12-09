@@ -1,0 +1,32 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_hexstone_bricks": {
+      "conditions": {
+        "items": [
+          {
+            "items": "spiritum:hexstone_bricks"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "spiritum:hexstone_bricks_wall"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_hexstone_bricks"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "spiritum:hexstone_bricks_wall"
+    ]
+  }
+}

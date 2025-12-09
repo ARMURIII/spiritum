@@ -12,18 +12,25 @@ import java.util.UUID;
 public class Ritual {
     private final arr.armuriii.spiritum.rituals.Ritual.Type type;
     private final Ingredient component;
-    private final int spiritAmount;
-    public Ritual(Type type, Ingredient component, int spiritAmount) {
+    public Ritual(Type type, Ingredient component) {
         this.type = Objects.requireNonNull(type);
         this.component = Objects.requireNonNull(component);
-        this.spiritAmount = spiritAmount;
     }
 
     public boolean onApply(RitualPedestalEntity pedestal, UUID owner) {
         pedestal.removeComponentsItem(pedestal.getItemMatching(component,pedestal.getItems().stream().map(ItemStack::getItem).toList()));
-        pedestal.removeSoul(spiritAmount);
         pedestal.updateListeners();
         return true;
+    }
+
+    /*
+    * Called every tick.
+    * If return is true, ends the ritual.
+    *
+    * Returns: whenever the ritual should end at current tick.
+    */
+    public boolean shouldEnd(RitualPedestalEntity pedestal) {
+        return false;
     }
 
     public boolean onRemove(RitualPedestalEntity pedestal, UUID owner) {
@@ -48,10 +55,6 @@ public class Ritual {
 
     public Ingredient getComponent() {
         return component;
-    }
-
-    public int getSpiritAmount() {
-        return spiritAmount;
     }
 
     public Type getType() {

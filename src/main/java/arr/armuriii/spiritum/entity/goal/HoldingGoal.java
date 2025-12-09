@@ -40,7 +40,8 @@ public class HoldingGoal  extends Goal {
             this.lastUpdateTime = l;
             List<ImpEntity> imps = this.mob.getWorld().getEntitiesByClass(ImpEntity.class, new Box(this.mob.getBlockPos()).expand(25, 5, 25),
                     (imp -> imp.getOwnerUuid() == this.mob.getOwnerUuid() && imp.getHelpRequired() && !imp.hasVehicle()));
-            if (!imps.isEmpty()) {
+
+            if (!imps.isEmpty() && imps.getFirst().isAlive()) {
                 help = imps.getFirst();
                 if (help == null) {
                     return false;
@@ -59,9 +60,9 @@ public class HoldingGoal  extends Goal {
     public boolean shouldContinue() {
         List<ImpEntity> imps = this.mob.getWorld().getEntitiesByClass(ImpEntity.class,new Box(this.mob.getBlockPos()).expand(25,5,25),
                 (imp -> imp.getOwnerUuid() == this.mob.getOwnerUuid() && imp.getHelpRequired() &&
-                        (imp.getVehicle() != null && imp.getVehicle().getUuid() == this.mob.getUuid())
-                ));
-        if (!imps.isEmpty() && !this.mob.getHelpRequired() && !this.mob.hasVehicle()) {
+                        (imp.getVehicle() != null && imp.getVehicle().getUuid() == this.mob.getUuid())));
+
+        if (!imps.isEmpty() && !this.mob.getHelpRequired() && imps.getFirst().isAlive()) {
             help = imps.getFirst();
             if (!help.isAlive()) {
                 return false;
@@ -80,22 +81,13 @@ public class HoldingGoal  extends Goal {
     }
 
     @Override
-    public void stop() {
-        if (!EntityPredicates.EXCEPT_CREATIVE_OR_SPECTATOR.test(help)) {
-            this.help = null;
-        }
-        this.mob.removeAllPassengers();
-        this.mob.getNavigation().stop();
-    }
-
-    @Override
     public boolean shouldRunEveryTick() {
         return true;
     }
 
     @Override
     public void tick() {
-        if (help != null) {
+        if (help != null && !mob.hasPassenger(help)) {
             this.mob.getLookControl().lookAt(help, 30.0F, 30.0F);
             this.updateCountdownTicks = Math.max(this.updateCountdownTicks - 1, 0);
             if ((this.pauseWhenMobIdle || this.mob.getVisibilityCache().canSee(help))

@@ -4,7 +4,7 @@
       "model": "spiritum:block/hexstone_bricks_slab"
     },
     "type=double": {
-      "model": "spiritum:block/hexstone"
+      "model": "spiritum:block/hexstone_bricks"
     },
     "type=top": {
       "model": "spiritum:block/hexstone_bricks_slab_top"

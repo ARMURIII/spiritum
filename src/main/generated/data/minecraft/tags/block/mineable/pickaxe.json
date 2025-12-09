@@ -1,11 +1,23 @@
 {
   "values": [
     "spiritum:hexstone",
+    "spiritum:hexstone_stairs",
+    "spiritum:hexstone_slab",
+    "spiritum:hexstone_wall",
     "spiritum:hexstone_bricks",
+    "spiritum:hexstone_bricks_stairs",
+    "spiritum:hexstone_bricks_slab",
+    "spiritum:hexstone_bricks_wall",
     "spiritum:polished_hexstone",
+    "spiritum:polished_hexstone_stairs",
+    "spiritum:polished_hexstone_slab",
+    "spiritum:polished_hexstone_wall",
     "spiritum:silvered_hexstone",
     "spiritum:silver_block",
     "spiritum:polished_silver_block",
+    "spiritum:polished_silver_stairs",
+    "spiritum:polished_silver_slab",
+    "spiritum:polished_silver_wall",
     "spiritum:ritual_pedestal"
   ]
 }

@@ -7,15 +7,19 @@
     "ComposterBlockMixin",
     "CookingRecipeSerializerMixin",
     "CropBlockMixin",
+    "DropperBlockMixin",
     "MobEntityMixin",
     "accessor.MinecraftServerAccessor",
-    "accessor.ServerWorldAccessor",
-    "accessor.StatusEffectInstanceAccessor"
+    "accessor.ServerWorldAccessor"
+  ],
+  "client": [
+    "ArmorFeatureRendererMixin",
+    "ClientPlayerEntityMixin"
   ],
   "injectors": {
     "defaultRequire": 1
   },
   "overwrites": {
     "requireAnnotations": true
-	}
+  }
 }

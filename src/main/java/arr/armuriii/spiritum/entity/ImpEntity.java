@@ -1,17 +1,23 @@
 package arr.armuriii.spiritum.entity;
 
+import arr.armuriii.spiritum.Spiritum;
 import arr.armuriii.spiritum.entity.goal.HealthMeleeAttackGoal;
 import arr.armuriii.spiritum.entity.goal.HealthProjectileAttackGoal;
 import arr.armuriii.spiritum.entity.goal.HoldingGoal;
+import arr.armuriii.spiritum.entity.projectile.SpitProjectileEntity;
+import arr.armuriii.spiritum.init.SpiritumItems;
+import arr.armuriii.spiritum.init.SpiritumParticles;
+import dev.emi.trinkets.api.TrinketsApi;
+import net.minecraft.client.MinecraftClient;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.PotionContentsComponent;
-import net.minecraft.entity.AnimationState;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
+import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.entity.*;
 import net.minecraft.entity.ai.RangedAttackMob;
 import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.entity.data.TrackedData;
 import net.minecraft.entity.data.TrackedDataHandlerRegistry;
@@ -22,20 +28,25 @@ import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.potion.Potions;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
 import net.minecraft.util.TimeHelper;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.intprovider.UniformIntProvider;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
-public class ImpEntity extends TameableEntity implements Angerable, RangedAttackMob {
+public class ImpEntity extends TameableEntity implements Angerable,Ownable,RangedAttackMob {
 
     private static final TrackedData<Integer> ANGER_TIME = DataTracker.registerData(ImpEntity.class, TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<Boolean> HELP_REQUIRED = DataTracker.registerData(ImpEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
-    private static final UniformIntProvider ANGER_TIME_RANGE = TimeHelper.betweenSeconds(30, 45);
+    private static final TrackedData<Integer> SPITTING = DataTracker.registerData(ImpEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    private static final UniformIntProvider ANGER_TIME_RANGE = TimeHelper.betweenSeconds(0, 10);
     public AnimationState spitAnimationState = new AnimationState();
     @Nullable
     private UUID angryAt;
@@ -51,7 +62,6 @@ public class ImpEntity extends TameableEntity implements Angerable, RangedAttack
     }
 
     protected void initGoals() {
-        //this.goalSelector.add(1, new SwimGoal(this));
         this.goalSelector.add(2, new SitGoal(this));
         this.goalSelector.add(3, new HoldingGoal(this,1.0f,false));
         this.goalSelector.add(4, new HealthMeleeAttackGoal(this, 1.0F, true));
@@ -81,29 +91,105 @@ public class ImpEntity extends TameableEntity implements Angerable, RangedAttack
     }
 
     @Override
+    public boolean tryAttack(Entity target) {
+        float attackDamage = (float)this.getAttributeValue(EntityAttributes.GENERIC_ATTACK_DAMAGE);
+        if (
+                TrinketsApi.getTrinketComponent(getOwner()).isPresent() &&
+                TrinketsApi.getTrinketComponent(getOwner()).get().isEquipped(SpiritumItems.SUMMONING_HAT)
+        )
+            attackDamage *= 1.25f;
+
+        DamageSource damageSource = this.getDamageSources().mobAttack(this);
+        if (this.getWorld() instanceof ServerWorld serverWorld) {
+            attackDamage = EnchantmentHelper.getDamage(serverWorld, this.getWeaponStack(), target, damageSource, attackDamage);
+        }
+
+        boolean damaged = target.damage(damageSource, attackDamage);
+        if (damaged) {
+            float knockback = this.getKnockbackAgainst(target, damageSource);
+            if (knockback > 0.0F && target instanceof LivingEntity livingEntity) {
+                livingEntity.takeKnockback(knockback * 0.25F, MathHelper.sin(this.getYaw() * ((float)Math.PI / 180F)), -MathHelper.cos(this.getYaw() * ((float)Math.PI / 180F)));
+                this.setVelocity(this.getVelocity().multiply(0.6, 1.0F, 0.6));
+            }
+
+            if (this.getWorld() instanceof ServerWorld serverWorld2)
+                EnchantmentHelper.onTargetDamaged(serverWorld2, target, damageSource);
+
+            this.onAttacking(target);
+            this.playAttackSound();
+        }
+
+        return damaged;
+    }
+
+    @Override
     public boolean isExperienceDroppingDisabled() {
         return true;
     }
-
-    /*@Override
-    public void baseTick() {
-        super.baseTick();
-        if ((getTarget() != null || getAngryAt() != null) && horizontalSpeed > 0) {
-            angryAnimationState.start(age);
-        }else {
-            angryAnimationState.stop();
-        }
-        if (!getPassengerList().isEmpty() && horizontalSpeed > 0)
-            holdingAnimationState.start(age);
-        else
-            holdingAnimationState.stop();
-    }*/
 
     @Override
     protected void initDataTracker(DataTracker.Builder builder) {
         super.initDataTracker(builder);
         builder.add(ANGER_TIME,0);
         builder.add(HELP_REQUIRED,false);
+        builder.add(SPITTING,0);
+    }
+
+    @Override
+    public void tickMovement() {
+        super.tickMovement();
+        if (this.getWorld() instanceof ServerWorld serverWorld) {
+            this.tickAngerLogic(serverWorld, false);
+            if (getTarget() instanceof ImpEntity imp && imp.getOwner() != null && imp.getOwnerUuid() == getOwnerUuid()) {
+                this.stopAnger();
+                this.setTarget(null);
+            }
+            if (serverWorld.getEntity(getAngryAt()) instanceof ImpEntity imp && imp.getOwner() != null && imp.getOwnerUuid() == getOwnerUuid()) {
+                this.stopAnger();
+                this.setTarget(null);
+            }
+        }
+    }
+
+    @Override
+    public void baseTick() {
+        super.baseTick();
+        spitting(Math.max(getSpitting()-1, 0));
+        if (getWorld().isClient()) {
+            if (getSpitting() > 0) {
+                spitAnimationState.startIfNotRunning(age);
+            }
+            else spitAnimationState.stop();
+        }
+    }
+
+    @Override
+    public void writeCustomDataToNbt(NbtCompound nbt) {
+        super.writeCustomDataToNbt(nbt);
+        writeAngerToNbt(nbt);
+        nbt.putInt("Spitting",getSpitting());
+    }
+
+    @Override
+    public void readCustomDataFromNbt(NbtCompound nbt) {
+        super.readCustomDataFromNbt(nbt);
+        readAngerFromNbt(getWorld(),nbt);
+        spitting(nbt.getInt("Spitting"));
+    }
+
+    public void playSpawnEffects() {
+        if (this.getWorld().isClient)
+            for(int i = 0; i < 20; ++i) {
+                double d = this.random.nextGaussian() * 0.02;
+                double e = this.random.nextGaussian() * 0.02;
+                double f = this.random.nextGaussian() * 0.02;
+                this.getWorld().addParticle(SpiritumParticles.IMP_TYPE, this.offsetX(1.0)-d*10.0,
+                        this.getRandomBodyY()-e*10.0,
+                        this.getParticleZ(1.0)-f*10.0,
+                        d,e,f);
+            }
+        else
+            this.getWorld().sendEntityStatus(this, (byte)20);
     }
 
     @Override
@@ -132,6 +218,11 @@ public class ImpEntity extends TameableEntity implements Angerable, RangedAttack
     }
 
     @Override
+    public boolean canTarget(LivingEntity target) {
+        return super.canTarget(target) && !(target instanceof Ownable ownable && ownable.getOwner() != null && ownable.getOwner().getUuid() == this.getOwnerUuid());
+    }
+
+    @Override
     public void setAngryAt(@Nullable UUID angryAt) {
         this.angryAt = angryAt;
     }
@@ -149,6 +240,14 @@ public class ImpEntity extends TameableEntity implements Angerable, RangedAttack
         return this.dataTracker.get(HELP_REQUIRED);
     }
 
+    public void spitting(int spit) {
+        this.dataTracker.set(SPITTING,spit);
+    }
+
+    public int getSpitting() {
+        return this.dataTracker.get(SPITTING);
+    }
+
     @Override
     public @Nullable LivingEntity getOwner() {
         return super.getOwner();
@@ -156,18 +255,15 @@ public class ImpEntity extends TameableEntity implements Angerable, RangedAttack
 
     @Override
     public void shootAt(LivingEntity target, float pullProgress) {
-        if (this.getWorld().isClient()) spitAnimationState.stop();
-        ItemStack itemStack = new ItemStack(Items.BOW);
-        ItemStack itemStack2 = new ItemStack(Items.TIPPED_ARROW);
-        itemStack2.set(DataComponentTypes.POTION_CONTENTS, new PotionContentsComponent(Potions.SLOWNESS));
-
-        PersistentProjectileEntity persistentProjectileEntity = ProjectileUtil.createArrowProjectile(this, itemStack2, pullProgress, itemStack);
+        SpitProjectileEntity spit = new SpitProjectileEntity(null,getWorld());
+        spit.setOwner(this.getOwner());
+        spit.setPos(getX(),getEyeY() - 0.1F,getZ());
         double d = target.getX() - this.getX();
-        double e = target.getBodyY(0.3333333333333333) - persistentProjectileEntity.getY();
+        double e = target.getBodyY(1/3f) - spit.getY();
         double f = target.getZ() - this.getZ();
         double g = Math.sqrt(d * d + f * f);
-        persistentProjectileEntity.setVelocity(d, e + g * (double)0.2F, f, 1.6F, (float)(14 - this.getWorld().getDifficulty().getId() * 4));
-        this.getWorld().spawnEntity(persistentProjectileEntity);
-        if (this.getWorld().isClient()) spitAnimationState.start(this.age);
+        spit.setVelocity(d, e + g * (double)0.2F, f, 1.6F, (float)(14 - this.getWorld().getDifficulty().getId() * 4));
+        this.getWorld().spawnEntity(spit);
+        spitting(30);
     }
 }

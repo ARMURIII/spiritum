@@ -3,7 +3,6 @@ package arr.armuriii.spiritum.client.entity.model.imp;
 import arr.armuriii.spiritum.entity.ImpEntity;
 import net.minecraft.client.model.*;
 import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.entity.model.FrogEntityModel;
 import net.minecraft.client.render.entity.model.SinglePartEntityModel;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.entity.Entity;
@@ -19,6 +18,7 @@ public class ImpModel<T extends Entity> extends SinglePartEntityModel<T> {
 	private final ModelPart head;
 	private final ModelPart leftLeg;
 	private final ModelPart rightLeg;
+
 	public ImpModel(ModelPart root) {
 		this.root = root.getChild("root");
 		this.body = this.root.getChild("body");
@@ -52,15 +52,13 @@ public class ImpModel<T extends Entity> extends SinglePartEntityModel<T> {
 	public void setAngles(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
 		this.getPart().traverse().forEach(ModelPart::resetTransform);
 		this.setHeadAngle(netHeadYaw, headPitch);
-		//this.setLimbAngles(limbSwing, limbSwingAmount);
         if (entity instanceof ImpEntity imp) {
             this.animateArms(imp);
             if (!imp.getPassengerList().isEmpty())
                 this.animate(ImpAnimation.HOLDING);
-            else if (imp.getTarget() != null || imp.getAngryAt() != null || imp.getAngerTime() > 0 || imp.hasAngerTime())
-                this.animate(ImpAnimation.ANGRY);
 
-            this.animateMovement(ImpAnimation.WALK,limbSwing,limbSwingAmount,1,1);
+            this.animateMovement(imp.hasAngerTime() && imp.getPassengerList().isEmpty() ?
+					ImpAnimation.WALK_ANGY : ImpAnimation.WALK,limbSwing*1.5f,limbSwingAmount*1.5f,1,1);
 
             this.updateAnimation(imp.spitAnimationState,ImpAnimation.SPIT,ageInTicks);
         }
@@ -79,24 +77,6 @@ public class ImpModel<T extends Entity> extends SinglePartEntityModel<T> {
 	private void setHeadAngle(float yaw, float pitch) {
 		this.head.pitch = pitch * ((float)Math.PI / 180F);
 		this.head.yaw = yaw * ((float)Math.PI / 180F);
-	}
-
-	private void setLimbAngles(float angle, float distance) {
-		float f = Math.min(0.5F, 3.0F * distance);
-		float g = angle * 0.8662F;
-		float h = MathHelper.cos(g);
-		float i = MathHelper.sin(g);
-		float j = Math.min(0.35F, f);
-		this.head.roll += 0.3F * i * f;
-		this.head.pitch += 1.2F * MathHelper.cos(g + ((float)Math.PI / 2F)) * j;
-		this.body.roll = 0.1F * i * f;
-		this.body.pitch = 1.0F * h * j;
-		this.leftLeg.pitch = 1.0F * h * f;
-		this.rightLeg.pitch = 1.0F * MathHelper.cos(g + (float)Math.PI) * f;
-		this.leftArm.pitch = -(0.8F * h * f);
-		this.leftArm.roll = 0.0F;
-		this.rightArm.pitch = -(0.8F * i * f);
-		this.rightArm.roll = 0.0F;
 	}
 
 	protected void animateArms(ImpEntity entity) {

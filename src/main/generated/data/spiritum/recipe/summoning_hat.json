@@ -1,0 +1,20 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "f": {
+      "item": "spiritum:silver_ingot"
+    },
+    "w": {
+      "item": "minecraft:leather"
+    }
+  },
+  "pattern": [
+    " w ",
+    "wfw"
+  ],
+  "result": {
+    "count": 1,
+    "id": "spiritum:summoning_hat"
+  }
+}

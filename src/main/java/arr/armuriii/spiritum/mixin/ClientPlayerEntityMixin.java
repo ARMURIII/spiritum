@@ -1,0 +1,20 @@
+package arr.armuriii.spiritum.mixin;
+
+import arr.armuriii.spiritum.init.SpiritumPotions;
+import com.llamalad7.mixinextras.injector.ModifyReturnValue;
+import com.mojang.authlib.GameProfile;
+import net.minecraft.client.network.AbstractClientPlayerEntity;
+import net.minecraft.client.network.ClientPlayerEntity;
+import net.minecraft.client.world.ClientWorld;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+
+@Mixin(ClientPlayerEntity.class)
+public class ClientPlayerEntityMixin extends AbstractClientPlayerEntity {
+
+    public ClientPlayerEntityMixin(ClientWorld world, GameProfile profile) {super(world, profile);}
+    @ModifyReturnValue(method = "canSprint", at = @At("RETURN"))
+    private boolean spiritum$lethargyStopSprinting(boolean original) {
+        return original && !hasStatusEffect(SpiritumPotions.LETHARGY);
+    }
+}

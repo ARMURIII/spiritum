@@ -2,9 +2,12 @@ package arr.armuriii.spiritum.init;
 
 import arr.armuriii.spiritum.Spiritum;
 import net.fabricmc.fabric.api.registry.FabricBrewingRecipeRegistryBuilder;
+import net.minecraft.entity.attribute.EntityAttributeModifier;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectCategory;
 import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.Potions;
 import net.minecraft.recipe.BrewingRecipeRegistry;
@@ -15,7 +18,9 @@ import net.minecraft.resource.featuretoggle.FeatureSet;
 
 public class SpiritumPotions {
 
-    public static final RegistryEntry.Reference<StatusEffect> LETHARGY = register(new StatusEffect(StatusEffectCategory.HARMFUL,14548835),"lethargy");
+    public static final RegistryEntry.Reference<StatusEffect> LETHARGY = register(new StatusEffect(StatusEffectCategory.HARMFUL,14548835)
+            .addAttributeModifier(EntityAttributes.GENERIC_ATTACK_SPEED,Spiritum.id("effect.lethargy"),-0.4, EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL)
+            ,"lethargy");
 
     public static final RegistryEntry.Reference<Potion> INERTIA = register(new Potion(new StatusEffectInstance(LETHARGY,4*60*20)),"lethargy");
 

@@ -1,28 +1,28 @@
 package arr.armuriii.spiritum.block.entity;
 
 import arr.armuriii.spiritum.Spiritum;
+import arr.armuriii.spiritum.block.RitualPedestal;
 import arr.armuriii.spiritum.init.SpiritumBlocks;
+import arr.armuriii.spiritum.init.SpiritumParticles;
 import arr.armuriii.spiritum.init.SpiritumRituals;
 import arr.armuriii.spiritum.rituals.Ritual;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.CampfireBlockEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.Inventories;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.network.packet.s2c.play.BlockEntityUpdateS2CPacket;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.recipe.Ingredient;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.text.Text;
 import net.minecraft.util.Clearable;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
 import net.minecraft.world.event.GameEvent;
 
@@ -32,11 +32,8 @@ import java.util.function.Consumer;
 public class RitualPedestalEntity  extends BlockEntity implements Clearable {
 
     private List<ItemStack> items = new ArrayList<>(List.of());
-    private short soul = 0;
     private long time = -1;
     private boolean hasValidRitual = false;
-
-    private boolean active = false;
 
     private Ritual ritual = SpiritumRituals.EMPTY;
 
@@ -50,12 +47,10 @@ public class RitualPedestalEntity  extends BlockEntity implements Clearable {
     @Override
     public void clear() {
         items.clear();
-        soul = 0;
-        time = -1;
+        setTime(-1L);
         hasValidRitual = false;
-        ritual = SpiritumRituals.EMPTY;
-        active = false;
-        owner = null;
+        removeRitual();
+        setOwner(null);
     }
 
     public BlockEntityUpdateS2CPacket toUpdatePacket() {
@@ -75,12 +70,9 @@ public class RitualPedestalEntity  extends BlockEntity implements Clearable {
                     items.add(ItemStack.fromNbtOrEmpty(lookup,list.getCompound(i)));
                 }
         }
-
-        soul = nbt.getShort("Soul");
         time = nbt.getLong("Time");
         if (nbt.contains("Ritual", NbtElement.STRING_TYPE))
-            Spiritum.RITUAL.getOrEmpty(Identifier.of(nbt.getString("Ritual")));
-        active = nbt.getBoolean("Active");
+            setRitual(Spiritum.RITUAL.getOrEmpty(Identifier.of(nbt.getString("Ritual"))).orElse(null));
     }
 
     @Override
@@ -92,11 +84,9 @@ public class RitualPedestalEntity  extends BlockEntity implements Clearable {
                 list.add(item.encode(lookup));
         }
         nbt.put("Items",list);
-        nbt.putInt("Soul",soul);
         nbt.putLong("Time",time);
         if (getRitual() != SpiritumRituals.EMPTY)
             nbt.putString("Ritual",Spiritum.RITUAL.getEntry(ritual).getIdAsString());
-        nbt.putBoolean("Active",active);
     }
 
     @Override
@@ -108,7 +98,8 @@ public class RitualPedestalEntity  extends BlockEntity implements Clearable {
                 list.add(item.encode(registryLookup));
         }
         nbt.put("Items",list);
-        nbt.putInt("Soul",soul);
+        if (getRitual() != SpiritumRituals.EMPTY)
+            nbt.putString("Ritual",Spiritum.RITUAL.getEntry(ritual).getIdAsString());
         return nbt;
     }
 
@@ -118,18 +109,24 @@ public class RitualPedestalEntity  extends BlockEntity implements Clearable {
             if (pedestal.getRitual().getType() == Ritual.Type.LASTING) {
                 pedestal.getRitual().clientTick(pedestal,pedestal.getOwner());
             }
+            Random random = world.getRandom();
+            double d = (double)pos.getX() + random.nextDouble();
+            double e = (double)pos.getY() + random.nextDouble();
+            double f = (double)pos.getZ() + random.nextDouble();
+            world.addParticle(SpiritumParticles.HEXFLAME_TYPE, d, e, f, 0, 0, 0);
+
         }
     }
 
     public static void serverTick(World world, BlockPos pos, BlockState state, RitualPedestalEntity pedestal) {
         tick(world, pos, state, pedestal);
         if (pedestal.getRitual() != SpiritumRituals.EMPTY && pedestal.isActive() && !pedestal.getRitual().instant(pedestal,pedestal.getOwner())) {
-            if (pedestal.getRitual().getType() == Ritual.Type.LASTING)
-                pedestal.getRitual().serverTick(pedestal,pedestal.getOwner());
-        }else if ((pedestal.isActive() && (pedestal.getRitual() != SpiritumRituals.EMPTY || pedestal.getRitual().getType() == Ritual.Type.INSTANT))) {
-            for (PlayerEntity player : world.getPlayers()) {
-                player.sendMessage(Text.literal("CLEARED: " + pedestal.getRitual().getType().name()));
+            if (pedestal.getRitual().getType() == Ritual.Type.LASTING) {
+                pedestal.getRitual().serverTick(pedestal, pedestal.getOwner());
+                if (pedestal.getRitual().shouldEnd(pedestal))
+                    pedestal.removeRitual();
             }
+        }else if ((pedestal.isActive() && pedestal.getRitual() != SpiritumRituals.EMPTY && pedestal.getRitual().getType() == Ritual.Type.INSTANT)) {
             pedestal.setActive(false);
             pedestal.removeRitual();
         }
@@ -140,7 +137,7 @@ public class RitualPedestalEntity  extends BlockEntity implements Clearable {
 
     public void updateRitualValidity() {
         for (Map.Entry<RegistryKey<Ritual>, Ritual> entry : Spiritum.RITUAL.getEntrySet()) {
-            if (ingredientMatchList(entry.getValue().getComponent(),this.getItems()) && getSoul() >= entry.getValue().getSpiritAmount()) {
+            if (entry.getValue() != SpiritumRituals.EMPTY && ingredientMatchList(entry.getValue().getComponent(),this.getItems())) {
                 setRitualValidity(true);
                 return;
             }
@@ -153,7 +150,7 @@ public class RitualPedestalEntity  extends BlockEntity implements Clearable {
     public Optional<Ritual> getValidRitual() {
         if (hasValidRitual()) {
             for (Map.Entry<RegistryKey<Ritual>, Ritual> entry : Spiritum.RITUAL.getEntrySet()) {
-                if (ingredientMatchList(entry.getValue().getComponent(),this.getItems()) && getSoul() >= entry.getValue().getSpiritAmount()) {
+                if (entry.getValue() != SpiritumRituals.EMPTY && ingredientMatchList(entry.getValue().getComponent(),this.getItems())) {
                     return Optional.of(entry.getValue());
                 }
             }
@@ -203,6 +200,7 @@ public class RitualPedestalEntity  extends BlockEntity implements Clearable {
         return items.set(items.size()-1,stack);
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     public ItemStack removeLast() {
         updateListeners();
         return items.removeLast();
@@ -290,25 +288,6 @@ public class RitualPedestalEntity  extends BlockEntity implements Clearable {
         return null;
     }
 
-    public int getSoul() {
-        return soul;
-    }
-
-    public void setSoul(int soul) {
-        updateListeners();
-        this.soul = (short)soul;
-    }
-
-    public void addSoul(int soul) {
-        updateListeners();
-        this.soul += (short) soul;
-    }
-
-    public void removeSoul(int soul) {
-        updateListeners();
-        this.soul -= (short) soul;
-    }
-
     public boolean hasValidRitual() {
         return hasValidRitual;
     }
@@ -324,7 +303,7 @@ public class RitualPedestalEntity  extends BlockEntity implements Clearable {
 
     public void setRitual(Ritual ritual) {
         updateListeners();
-        this.setActive(true);
+        this.setActive(ritual != null && ritual != SpiritumRituals.EMPTY);
         this.ritual = ritual;
     }
 
@@ -336,11 +315,15 @@ public class RitualPedestalEntity  extends BlockEntity implements Clearable {
     }
 
     public boolean isActive() {
-        return active;
+        return world != null && world.getBlockState(getPos()).get(Spiritum.ACTIVE);
     }
 
     public void setActive(boolean active) {
-        this.active = active;
+        if (world != null && world.getBlockState(getPos()).getBlock() instanceof RitualPedestal)
+            world.setBlockState(getPos(),world.getBlockState(getPos()).with(Spiritum.ACTIVE,active));
+        else
+            getCachedState().with(Spiritum.ACTIVE,active);
+
     }
 
     public UUID getOwner() {

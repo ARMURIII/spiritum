@@ -1,7 +1,9 @@
 package arr.armuriii.spiritum.client;
 import arr.armuriii.spiritum.Spiritum;
+import arr.armuriii.spiritum.init.SpiritumBlocks;
 import arr.armuriii.spiritum.init.SpiritumEntities;
 import arr.armuriii.spiritum.init.SpiritumPotions;
+import dev.emi.trinkets.api.TrinketsApi;
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
@@ -14,11 +16,15 @@ import net.minecraft.data.client.TextureMap;
 import net.minecraft.data.server.recipe.RecipeExporter;
 import net.minecraft.data.server.recipe.RecipeProvider;
 import net.minecraft.data.server.recipe.ShapedRecipeJsonBuilder;
+import net.minecraft.entity.EntityType;
 import net.minecraft.item.Items;
+import net.minecraft.recipe.Ingredient;
 import net.minecraft.recipe.book.RecipeCategory;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.tag.BlockTags;
+import net.minecraft.registry.tag.EntityTypeTags;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -36,6 +42,7 @@ public class SpiritumDataGenerator implements DataGeneratorEntrypoint {
 		pack.addProvider(CraftingGenerator::new);
 		pack.addProvider(LootGenerator::new);
 		pack.addProvider(BlockTagGenerator::new);
+		pack.addProvider(EntityTypeTagGenerator::new);
 	}
 
 	private static class ModelGenerator extends FabricModelProvider {
@@ -51,8 +58,8 @@ public class SpiritumDataGenerator implements DataGeneratorEntrypoint {
 			generator.registerCubeAllModelTexturePool(POLISHED_HEXSTONE);
 
 			registerAllVariants(generator,List.of(HEXSTONE_STAIRS,HEXSTONE_SLAB,HEXSTONE_WALL),Spiritum.id("block/hexstone"));
-			registerAllVariants(generator,List.of(POLISHED_HEXSTONE_STAIRS,POLISHED_HEXSTONE_SLAB,POLISHED_HEXSTONE_WALL),Spiritum.id("block/hexstone"));
-			registerAllVariants(generator,List.of(HEXSTONE_BRICKS_STAIRS,HEXSTONE_BRICKS_SLAB,HEXSTONE_BRICKS_WALL),Spiritum.id("block/hexstone"));
+			registerAllVariants(generator,List.of(POLISHED_HEXSTONE_STAIRS,POLISHED_HEXSTONE_SLAB,POLISHED_HEXSTONE_WALL),Spiritum.id("block/polished_hexstone"));
+			registerAllVariants(generator,List.of(HEXSTONE_BRICKS_STAIRS,HEXSTONE_BRICKS_SLAB,HEXSTONE_BRICKS_WALL),Spiritum.id("block/hexstone_bricks"));
 
 			registerAllVariants(generator,List.of(POLISHED_SILVER_STAIRS,POLISHED_SILVER_SLAB,POLISHED_SILVER_WALL),Spiritum.id("block/polished_silver_block"));
 		}
@@ -131,6 +138,11 @@ public class SpiritumDataGenerator implements DataGeneratorEntrypoint {
 			builder.add(TIPPED_SILVER_NEEDLE, "Tipped Silver Needle");
 			builder.add(SPIRIT_BOTTLE, "Bottled Spirit");
 			builder.add(SUMMONING_TOKEN, "Summoning Token");
+			builder.add(SUMMONING_HAT, "Summoning Hat");
+			builder.add("item.spiritum.summoning_hat.tooltip", "25% increased Imp attack damage");
+
+
+
 			builder.add(FLESH_BLOCK,"Flesh Block");
 			builder.add(SILVER_BLOCK,"Silver Block");
 			builder.add(POLISHED_SILVER_BLOCK,"Polished Silver Block");
@@ -152,32 +164,20 @@ public class SpiritumDataGenerator implements DataGeneratorEntrypoint {
 			builder.add(POLISHED_HEXSTONE_WALL,"Polished Hexstone Wall");
 			builder.add(RITUAL_PEDESTAL,"Ritual Pedestal");
 
-			/*builder.add(POLISHED_SILVER_STAIRS,"Polished Silver Stairs");
-			builder.add(POLISHED_SILVER_SLAB,"Polished Silver Slab");
-			builder.add(POLISHED_SILVER_WALL,"Polished Silver Wall");
-
-			builder.add(HEXSTONE_STAIRS,"Hexstone Stairs");
-			builder.add(HEXSTONE_SLAB,"Hexstone Slab");
-			builder.add(HEXSTONE_WALL,"Hexstone Wall");
-
-			builder.add(HEXSTONE_BRICKS_STAIRS,"Hexstone Bricks Stairs");
-			builder.add(HEXSTONE_BRICKS_SLAB,"Hexstone Bricks Slab");
-			builder.add(HEXSTONE_BRICKS_WALL,"Hexstone Bricks Wall");
-
-			builder.add(POLISHED_HEXSTONE_STAIRS,"Polished Hexstone Stairs");
-			builder.add(POLISHED_HEXSTONE_SLAB,"Polished Hexstone Slab");
-			builder.add(POLISHED_HEXSTONE_WALL,"Polished Hexstone Wall");*/
-
 			builder.add(SpiritumEntities.IMP,"Imp");
+			builder.add(SpiritumEntities.SPIRIT,"Spirit");
+			builder.add(SpiritumEntities.SPIT,"Spit");
 			builder.add(SpiritumPotions.LETHARGY.value().getTranslationKey(),"Lethargy");
 			builder.add("item.minecraft.potion.effect.lethargy","Potion of Lethargy");
 			builder.add("item.minecraft.splash_potion.effect.lethargy","Splash Potion of Lethargy");
 			builder.add("item.minecraft.lingering_potion.effect.lethargy","Lingering Potion of Lethargy");
+			builder.add("item.minecraft.tipped_arrow.effect.lethargy","Arrow of Lethargy");
 
 			builder.add("death.attack.hex","%1$s was hexed");
 			builder.add("death.attack.hex.item","%1$s was hexed by %2$s using %3$s");
 			builder.add("death.attack.hex.player","%1$s was hexed by %2$s");
 			builder.add("itemGroup.spiritum.spiritum_group","Spiritum");
+			builder.add("itemGroup.spiritum.tipped_needle_group","Tipped Needles");
 			builder.add("commands.ritual.success","%s ritual has : %s");
 		}
 	}
@@ -187,11 +187,32 @@ public class SpiritumDataGenerator implements DataGeneratorEntrypoint {
 
 		@Override
 		public void generate(RecipeExporter exporter) {
+
 			RecipeProvider.offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS,POLISHED_SILVER_BLOCK,SILVER_BLOCK);
 			RecipeProvider.offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS,POLISHED_HEXSTONE, HEXSTONE);
 			RecipeProvider.offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS,POLISHED_HEXSTONE, HEXSTONE_BRICKS);
-			RecipeProvider.offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS,HEXSTONE_BRICKS, HEXSTONE);
 			RecipeProvider.offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS,HEXSTONE_BRICKS, POLISHED_HEXSTONE);
+			RecipeProvider.offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS,HEXSTONE_BRICKS, HEXSTONE);
+
+			RecipeProvider.offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS,HEXSTONE_STAIRS,HEXSTONE);
+			RecipeProvider.offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS,HEXSTONE_SLAB,HEXSTONE);
+			RecipeProvider.offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS,HEXSTONE_WALL,HEXSTONE);
+
+            for (Block block : List.of(HEXSTONE,HEXSTONE_BRICKS,POLISHED_HEXSTONE)) {
+                RecipeProvider.offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS,HEXSTONE_BRICKS_STAIRS,block);
+                RecipeProvider.offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS,HEXSTONE_BRICKS_SLAB,block,2);
+                RecipeProvider.offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS,HEXSTONE_BRICKS_WALL,block);
+
+                RecipeProvider.offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS,POLISHED_HEXSTONE_STAIRS,block);
+                RecipeProvider.offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS,POLISHED_HEXSTONE_SLAB,block,2);
+                RecipeProvider.offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS,POLISHED_HEXSTONE_WALL,block);
+            }
+
+			for (Block block : List.of(SILVER_BLOCK,POLISHED_SILVER_BLOCK)) {
+				RecipeProvider.offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS, POLISHED_SILVER_STAIRS, block);
+				RecipeProvider.offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS, POLISHED_SILVER_SLAB, block,2);
+				RecipeProvider.offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS, POLISHED_SILVER_WALL, block);
+			}
 
 			ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, POPPET)
 					.pattern(" w ")
@@ -201,6 +222,15 @@ public class SpiritumDataGenerator implements DataGeneratorEntrypoint {
 					.input('f', FLESH_CLUMP)
 					.criterion(FabricRecipeProvider.hasItem(FLESH_CLUMP),
 							FabricRecipeProvider.conditionsFromItem(FLESH_CLUMP))
+					.offerTo(exporter);
+
+			ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, SUMMONING_HAT)
+					.pattern(" w ")
+					.pattern("wfw")
+					.input('w', Items.LEATHER)
+					.input('f', SILVER_INGOT)
+					.criterion(FabricRecipeProvider.hasItem(SILVER_INGOT),
+							FabricRecipeProvider.conditionsFromItem(SILVER_INGOT))
 					.offerTo(exporter);
 
 			ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, SILVER_NEEDLE,8)
@@ -232,6 +262,25 @@ public class SpiritumDataGenerator implements DataGeneratorEntrypoint {
 					.criterion(FabricRecipeProvider.hasItem(SILVER_INGOT),
 							FabricRecipeProvider.conditionsFromItem(SILVER_INGOT))
 					.offerTo(exporter);
+
+			RecipeProvider.createStairsRecipe(HEXSTONE_STAIRS, Ingredient.ofItems(HEXSTONE))
+					.criterion(hasItem(HEXSTONE), conditionsFromItem(HEXSTONE)).offerTo(exporter);
+			RecipeProvider.createStairsRecipe(POLISHED_SILVER_STAIRS, Ingredient.ofItems(POLISHED_SILVER_BLOCK))
+					.criterion(hasItem(POLISHED_SILVER_BLOCK), conditionsFromItem(POLISHED_SILVER_BLOCK)).offerTo(exporter);
+			RecipeProvider.createStairsRecipe(HEXSTONE_BRICKS_STAIRS, Ingredient.ofItems(HEXSTONE_BRICKS))
+					.criterion(hasItem(HEXSTONE_BRICKS), conditionsFromItem(HEXSTONE_BRICKS)).offerTo(exporter);
+			RecipeProvider.createStairsRecipe(POLISHED_HEXSTONE_STAIRS, Ingredient.ofItems(POLISHED_HEXSTONE))
+					.criterion(hasItem(POLISHED_HEXSTONE), conditionsFromItem(POLISHED_HEXSTONE)).offerTo(exporter);
+
+			RecipeProvider.offerSlabRecipe(exporter,RecipeCategory.BUILDING_BLOCKS,HEXSTONE_SLAB, HEXSTONE);
+			RecipeProvider.offerSlabRecipe(exporter,RecipeCategory.BUILDING_BLOCKS,POLISHED_SILVER_SLAB, POLISHED_SILVER_BLOCK);
+			RecipeProvider.offerSlabRecipe(exporter,RecipeCategory.BUILDING_BLOCKS,HEXSTONE_BRICKS_SLAB, HEXSTONE_BRICKS);
+			RecipeProvider.offerSlabRecipe(exporter,RecipeCategory.BUILDING_BLOCKS,POLISHED_HEXSTONE_SLAB, POLISHED_HEXSTONE);
+
+			RecipeProvider.offerWallRecipe(exporter,RecipeCategory.BUILDING_BLOCKS,HEXSTONE_WALL, HEXSTONE);
+			RecipeProvider.offerWallRecipe(exporter,RecipeCategory.BUILDING_BLOCKS,POLISHED_SILVER_WALL, POLISHED_SILVER_BLOCK);
+			RecipeProvider.offerWallRecipe(exporter,RecipeCategory.BUILDING_BLOCKS,HEXSTONE_BRICKS_WALL, HEXSTONE_BRICKS);
+			RecipeProvider.offerWallRecipe(exporter,RecipeCategory.BUILDING_BLOCKS,POLISHED_HEXSTONE_WALL, POLISHED_HEXSTONE);
 
 			RecipeProvider.offerSmelting(exporter, List.of(HEXSTONE),RecipeCategory.MISC,POLISHED_HEXSTONE,2.0f,200,"hexstone");
 
@@ -337,6 +386,20 @@ public class SpiritumDataGenerator implements DataGeneratorEntrypoint {
 					.add(POLISHED_SILVER_WALL)
 					.add(POLISHED_HEXSTONE_WALL)
 					.setReplace(false);
+		}
+	}
+	private static class EntityTypeTagGenerator extends FabricTagProvider.EntityTypeTagProvider {
+
+		public EntityTypeTagGenerator(FabricDataOutput output, CompletableFuture<RegistryWrapper.WrapperLookup> registriesFuture) {
+			super(output, registriesFuture);
+		}
+
+		@Override
+		protected void configure(RegistryWrapper.WrapperLookup wrapperLookup) {
+			getOrCreateTagBuilder(SpiritumEntities.HAS_SOUL)
+					.add(EntityType.PLAYER)
+					.add(EntityType.VILLAGER)
+					.forceAddTag(EntityTypeTags.UNDEAD);
 		}
 	}
 }
