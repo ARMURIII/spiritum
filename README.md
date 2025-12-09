@@ -9,8 +9,8 @@
 * Rituals using the Ritual Pedestal ✓
 * Flesh clumps by using meat in a composter ✓
 * Imps ✓
-* Summoning token found in ancient city **WIP** ✓~
-* Lethargy Status effect and potion **WIP** ✓~
-* Spirit **WIP** X
-* Summoning Hat **WIP** X
+* Summoning token found in ancient city ✓
+* Lethargy Status effect and potion ✓
+* Spirit ✓
+* Summoning Hat ✓
 
