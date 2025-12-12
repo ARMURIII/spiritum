@@ -1,6 +1,5 @@
 package arr.armuriii.spiritum.entity;
 
-import arr.armuriii.spiritum.Spiritum;
 import arr.armuriii.spiritum.entity.goal.HealthMeleeAttackGoal;
 import arr.armuriii.spiritum.entity.goal.HealthProjectileAttackGoal;
 import arr.armuriii.spiritum.entity.goal.HoldingGoal;
@@ -8,9 +7,6 @@ import arr.armuriii.spiritum.entity.projectile.SpitProjectileEntity;
 import arr.armuriii.spiritum.init.SpiritumItems;
 import arr.armuriii.spiritum.init.SpiritumParticles;
 import dev.emi.trinkets.api.TrinketsApi;
-import net.minecraft.client.MinecraftClient;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.PotionContentsComponent;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.*;
 import net.minecraft.entity.ai.RangedAttackMob;
@@ -24,15 +20,9 @@ import net.minecraft.entity.data.TrackedDataHandlerRegistry;
 import net.minecraft.entity.mob.*;
 import net.minecraft.entity.passive.*;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.projectile.PersistentProjectileEntity;
-import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.potion.Potions;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
 import net.minecraft.util.TimeHelper;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.intprovider.UniformIntProvider;
@@ -46,7 +36,7 @@ public class ImpEntity extends TameableEntity implements Angerable,Ownable,Range
     private static final TrackedData<Integer> ANGER_TIME = DataTracker.registerData(ImpEntity.class, TrackedDataHandlerRegistry.INTEGER);
     private static final TrackedData<Boolean> HELP_REQUIRED = DataTracker.registerData(ImpEntity.class, TrackedDataHandlerRegistry.BOOLEAN);
     private static final TrackedData<Integer> SPITTING = DataTracker.registerData(ImpEntity.class, TrackedDataHandlerRegistry.INTEGER);
-    private static final UniformIntProvider ANGER_TIME_RANGE = TimeHelper.betweenSeconds(0, 10);
+    private static final UniformIntProvider ANGER_TIME_RANGE = TimeHelper.betweenSeconds(30, 60);
     public AnimationState spitAnimationState = new AnimationState();
     @Nullable
     private UUID angryAt;
@@ -63,9 +53,9 @@ public class ImpEntity extends TameableEntity implements Angerable,Ownable,Range
 
     protected void initGoals() {
         this.goalSelector.add(2, new SitGoal(this));
-        this.goalSelector.add(3, new HoldingGoal(this,1.0f,false));
+        this.goalSelector.add(3, new HoldingGoal(this,1.0f,true));
         this.goalSelector.add(4, new HealthMeleeAttackGoal(this, 1.0F, true));
-        this.goalSelector.add(5, new HealthProjectileAttackGoal(this, 0.5F,40,25f,5f));
+        this.goalSelector.add(5, new HealthProjectileAttackGoal(this, 0.5F,30,25,5));
         this.goalSelector.add(6, new FollowOwnerGoal(this, 0.5F, 15.0F, 2.0F));
         this.goalSelector.add(7, new WanderAroundFarGoal(this, 0.5F));
         this.goalSelector.add(10, new LookAtEntityGoal(this, PlayerEntity.class, 8.0F));
@@ -138,17 +128,21 @@ public class ImpEntity extends TameableEntity implements Angerable,Ownable,Range
     @Override
     public void tickMovement() {
         super.tickMovement();
-        if (this.getWorld() instanceof ServerWorld serverWorld) {
-            this.tickAngerLogic(serverWorld, false);
-            if (getTarget() instanceof ImpEntity imp && imp.getOwner() != null && imp.getOwnerUuid() == getOwnerUuid()) {
-                this.stopAnger();
-                this.setTarget(null);
-            }
-            if (serverWorld.getEntity(getAngryAt()) instanceof ImpEntity imp && imp.getOwner() != null && imp.getOwnerUuid() == getOwnerUuid()) {
-                this.stopAnger();
-                this.setTarget(null);
-            }
-        }
+        if (this.getWorld() instanceof ServerWorld serverWorld)
+            this.tickAngerLogic(serverWorld, true);
+    }
+
+    @Override
+    public boolean canAttackWithOwner(LivingEntity target, LivingEntity owner) {
+        return !hasSameOwner(target,owner);
+    }
+
+    public boolean hasSameOwner(LivingEntity living) {
+        return living instanceof Ownable ownable && ownable.getOwner() != null && ownable.getOwner().getUuid() == getOwnerUuid();
+    }
+
+    public boolean hasSameOwner(LivingEntity living, LivingEntity owner) {
+        return living instanceof Ownable ownable && ownable.getOwner() != null && ownable.getOwner().getUuid() == owner.getUuid();
     }
 
     @Override
@@ -156,9 +150,8 @@ public class ImpEntity extends TameableEntity implements Angerable,Ownable,Range
         super.baseTick();
         spitting(Math.max(getSpitting()-1, 0));
         if (getWorld().isClient()) {
-            if (getSpitting() > 0) {
+            if (getSpitting() > 0)
                 spitAnimationState.startIfNotRunning(age);
-            }
             else spitAnimationState.stop();
         }
     }
@@ -219,12 +212,23 @@ public class ImpEntity extends TameableEntity implements Angerable,Ownable,Range
 
     @Override
     public boolean canTarget(LivingEntity target) {
-        return super.canTarget(target) && !(target instanceof Ownable ownable && ownable.getOwner() != null && ownable.getOwner().getUuid() == this.getOwnerUuid());
+        return target == null || (super.canTarget(target) && !(target instanceof ImpEntity imp && imp.getOwnerUuid() != null && imp.getOwnerUuid() == this.getOwnerUuid()));
+    }
+
+    @Override
+    public @Nullable LivingEntity getTarget() {
+        return super.getTarget();
+    }
+
+    @Override
+    public void setTarget(@Nullable LivingEntity target) {
+        if (canTarget(target))
+            super.setTarget(target);
     }
 
     @Override
     public void setAngryAt(@Nullable UUID angryAt) {
-        this.angryAt = angryAt;
+            this.angryAt = angryAt;
     }
 
     @Override

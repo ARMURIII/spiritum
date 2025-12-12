@@ -85,7 +85,11 @@ public class SpiritumRituals {
                     for (int i = 0; i < 2;i++) {
                         ImpEntity imp = new ImpEntity(SpiritumEntities.IMP, world);
                         imp.setTamed(true,true);
-                        imp.setOwnerUuid(owner);
+                        if (owner != null)
+                            imp.setOwnerUuid(owner);
+                        else {
+                            imp.setOwner(world.getClosestPlayer(pedestal.getPos().getX(), pedestal.getPos().getY(), pedestal.getPos().getZ(),16,false));
+                        }
                         if (world instanceof ServerWorld serverWorld)
                             MobSpawningLogic.spawnNearby(serverWorld,pedestal.getPos(),imp,SpiritumEntities.IMP,2,4);
                     }

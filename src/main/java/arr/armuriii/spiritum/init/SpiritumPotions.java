@@ -19,7 +19,7 @@ import net.minecraft.resource.featuretoggle.FeatureSet;
 public class SpiritumPotions {
 
     public static final RegistryEntry.Reference<StatusEffect> LETHARGY = register(new StatusEffect(StatusEffectCategory.HARMFUL,14548835)
-            .addAttributeModifier(EntityAttributes.GENERIC_ATTACK_SPEED,Spiritum.id("effect.lethargy"),-0.4, EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL)
+            .addAttributeModifier(EntityAttributes.GENERIC_ATTACK_SPEED,Spiritum.id("effect.lethargy"),-0.2, EntityAttributeModifier.Operation.ADD_MULTIPLIED_TOTAL)
             ,"lethargy");
 
     public static final RegistryEntry.Reference<Potion> INERTIA = register(new Potion(new StatusEffectInstance(LETHARGY,4*60*20)),"lethargy");

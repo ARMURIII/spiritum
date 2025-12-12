@@ -315,7 +315,7 @@ public class RitualPedestalEntity  extends BlockEntity implements Clearable {
     }
 
     public boolean isActive() {
-        return world != null && world.getBlockState(getPos()).get(Spiritum.ACTIVE);
+        return world != null && world.getBlockState(getPos()).contains(Spiritum.ACTIVE) && world.getBlockState(getPos()).get(Spiritum.ACTIVE);
     }
 
     public void setActive(boolean active) {

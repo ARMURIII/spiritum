@@ -97,8 +97,7 @@ public class RitualPedestalRenderer implements BlockEntityRenderer<RitualPedesta
             matrices.translate(0,
                     height+1,
                     0);
-            Random random = new Random(entity.getWorld().getTime()+(long)(10*tickDelta));
-            if (MinecraftClient.getInstance() != null && random.nextInt(25) == 0)
+            if (MinecraftClient.getInstance() != null && tickDelta <= 0.05)
                 spawnParticles(5,MinecraftClient.getInstance(),
                         Math.cos(angle+offset)/2+entity.getPos().toCenterPos().x,
                         height+1.75+entity.getPos().toCenterPos().y,

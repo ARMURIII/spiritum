@@ -3,6 +3,8 @@ package arr.armuriii.spiritum.entity.goal;
 import arr.armuriii.spiritum.entity.ImpEntity;
 import net.minecraft.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.entity.mob.PathAwareEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.text.Text;
 
 public class HealthMeleeAttackGoal extends MeleeAttackGoal {
     public HealthMeleeAttackGoal(PathAwareEntity mob, double speed, boolean pauseWhenMobIdle) {
@@ -11,9 +13,12 @@ public class HealthMeleeAttackGoal extends MeleeAttackGoal {
 
     @Override
     public boolean canStart() {
-        return super.canStart() && !(mob.getTarget() instanceof ImpEntity imp &&
-                mob instanceof ImpEntity imp1 && imp.getOwner() != null && imp1.getOwner() != null &&
-                imp.getOwner().getUuid() == imp1.getOwner().getUuid()) && mob.getHealth() > (mob.getMaxHealth()/2);
+        return super.canStart() && mob.getHealth() > (mob.getMaxHealth()/2);
+    }
+
+    @Override
+    public boolean shouldRunEveryTick() {
+        return false;
     }
 
     @Override

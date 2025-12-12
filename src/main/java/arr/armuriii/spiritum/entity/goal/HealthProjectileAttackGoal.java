@@ -7,6 +7,8 @@ import net.minecraft.entity.ai.RangedAttackMob;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.ai.pathing.Path;
 import net.minecraft.entity.mob.PathAwareEntity;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
@@ -74,12 +76,15 @@ public class HealthProjectileAttackGoal extends Goal {
         this.seenTargetTicks = 0;
         this.updateCountdownTicks = -1;
 
+        this.mob.dismountVehicle();
+
         if (this.mob instanceof ImpEntity imp)
             imp.setHelpRequired(false);
     }
 
+    @Override
     public boolean shouldRunEveryTick() {
-        return true;
+        return false;
     }
 
     public void tick() {

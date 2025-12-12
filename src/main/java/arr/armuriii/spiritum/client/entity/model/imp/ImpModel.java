@@ -58,7 +58,7 @@ public class ImpModel<T extends Entity> extends SinglePartEntityModel<T> {
                 this.animate(ImpAnimation.HOLDING);
 
             this.animateMovement(imp.hasAngerTime() && imp.getPassengerList().isEmpty() ?
-					ImpAnimation.WALK_ANGY : ImpAnimation.WALK,limbSwing*1.5f,limbSwingAmount*1.5f,1,1);
+					ImpAnimation.WALK_ANGY : ImpAnimation.WALK,limbSwing*3f,limbSwingAmount*6f,1,1);
 
             this.updateAnimation(imp.spitAnimationState,ImpAnimation.SPIT,ageInTicks);
         }

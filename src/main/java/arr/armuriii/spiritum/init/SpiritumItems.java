@@ -13,6 +13,7 @@ import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.PotionContentsComponent;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.ContainerLock;
@@ -59,13 +60,16 @@ public class SpiritumItems {
                     if (component != null && component.potion().isPresent())
 
                         for (StatusEffectInstance instance : component.getEffects()) {
-                            player.addStatusEffect(new StatusEffectInstance(
-                                    instance.getEffectType(),
-                                    instance.mapDuration(duration -> duration/2),
-                                    instance.getAmplifier(),
-                                    instance.isAmbient(),
-                                    instance.shouldShowParticles()
-                            ));
+                            if (instance.getEffectType().value().isInstant())
+                                instance.getEffectType().value().applyInstantEffect(attacker, attacker, player, instance.getAmplifier(), 1.0);
+                            else
+                                player.addStatusEffect(new StatusEffectInstance(
+                                        instance.getEffectType(),
+                                        instance.mapDuration(duration -> duration/2),
+                                        instance.getAmplifier(),
+                                        instance.isAmbient(),
+                                        instance.shouldShowParticles()
+                                ));
                         }
                 }
             }
