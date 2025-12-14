@@ -5,12 +5,10 @@ import arr.armuriii.spiritum.init.SpiritumItems;
 import arr.armuriii.spiritum.mixin.accessor.MinecraftServerAccessor;
 import com.mojang.authlib.GameProfile;
 import net.fabricmc.fabric.api.entity.FakePlayer;
-import net.minecraft.command.argument.GameProfileArgumentType;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
@@ -18,9 +16,6 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.world.PlayerSaveHandler;
 import net.minecraft.world.World;
-
-import java.util.List;
-import java.util.Objects;
 
 public class NeedleItem extends Item {
     public NeedleItem(Settings settings) {
@@ -47,7 +42,7 @@ public class NeedleItem extends Item {
                     }
                 }
             }
-            user.getItemCooldownManager().set(SpiritumItems.POPPET,200);
+            user.getItemCooldownManager().set(SpiritumItems.POPPET,400);
             needle.decrement(1);
             return TypedActionResult.success(user.getStackInHand(hand));
         }

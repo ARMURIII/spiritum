@@ -4,19 +4,17 @@ package arr.armuriii.spiritum.init;
 import arr.armuriii.spiritum.Spiritum;
 import arr.armuriii.spiritum.entity.SpiritEntity;
 import arr.armuriii.spiritum.item.NeedleItem;
+import arr.armuriii.spiritum.utils.ImmutableTwin;
 import dev.emi.trinkets.api.SlotReference;
-import dev.emi.trinkets.api.Trinket;
 import dev.emi.trinkets.api.TrinketItem;
-import dev.emi.trinkets.api.TrinketsApi;
 import net.fabricmc.fabric.api.itemgroup.v1.FabricItemGroup;
 import net.fabricmc.fabric.api.loot.v3.LootTableEvents;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.FoodComponents;
 import net.minecraft.component.type.PotionContentsComponent;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.ContainerLock;
 import net.minecraft.item.*;
 import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.loot.LootPool;
@@ -42,7 +40,7 @@ import static arr.armuriii.spiritum.init.SpiritumBlocks.*;
 
 public class SpiritumItems {
 
-    public static final Item FLESH_CLUMP = register(new Item(new Item.Settings()),"flesh_clump");
+    public static final Item FLESH_CLUMP = register(new Item(new Item.Settings().food(FoodComponents.GOLDEN_CARROT)),"flesh_clump");
     public static final Item POPPET = register(new Item(new Item.Settings().maxCount(1)),"poppet");
     public static final Item RAW_SILVER = register(new Item(new Item.Settings()),"raw_silver");
     public static final Item SILVER_INGOT = register(new Item(new Item.Settings()),"silver_ingot");
@@ -107,7 +105,7 @@ public class SpiritumItems {
     },"spirit_bottle");
 
 
-    public static final Item SUMMONING_TOKEN = register(new Item(new Item.Settings().maxDamage(56)),"summoning_token");
+    public static final Item SUMMONING_TOKEN = register(new Item(new Item.Settings().maxDamage(64)),"summoning_token");
 
     public static final Item SUMMONING_HAT = register(new TrinketItem(new Item.Settings().maxCount(1)){
         @Override
@@ -116,15 +114,22 @@ public class SpiritumItems {
             tooltip.add(Text.translatable("item.spiritum.summoning_hat.tooltip").withColor(0x933333));
         }
 
-        @Override
-        public RegistryEntry<SoundEvent> getEquipSound(ItemStack stack, SlotReference slot, LivingEntity entity) {
-            return SoundEvents.ITEM_ARMOR_EQUIP_LEATHER;
+        public static ImmutableTwin<RegistryEntry<SoundEvent>> getEquipSounds() {
+            return new ImmutableTwin<>(SoundEvents.ITEM_ARMOR_EQUIP_LEATHER,SoundEvents.ITEM_ARMOR_EQUIP_ELYTRA);
         }
         @Override
         public void onUnequip(ItemStack stack, SlotReference ref, LivingEntity user) {
             super.onUnequip(stack, ref, user);
-            Trinket trinket = TrinketsApi.getTrinket(stack.getItem());
-            RegistryEntry<SoundEvent> soundEvent = trinket.getEquipSound(stack, ref, user);
+            RegistryEntry<SoundEvent> soundEvent = getEquipSounds().getLeft();
+            if (!stack.isEmpty() && soundEvent != null) {
+                user.emitGameEvent(GameEvent.EQUIP);
+                user.playSound(soundEvent.value(), 1.0F, 1.0F);
+            }
+        }
+        @Override
+        public void onEquip(ItemStack stack, SlotReference ref, LivingEntity user) {
+            super.onEquip(stack, ref, user);
+            RegistryEntry<SoundEvent> soundEvent = getEquipSounds().getRight();
             if (!stack.isEmpty() && soundEvent != null) {
                 user.emitGameEvent(GameEvent.EQUIP);
                 user.playSound(soundEvent.value(), 1.0F, 1.0F);

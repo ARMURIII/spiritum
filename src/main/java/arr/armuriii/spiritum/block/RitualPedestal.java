@@ -12,12 +12,11 @@ import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.ai.pathing.NavigationType;
 import net.minecraft.entity.decoration.ItemFrameEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.inventory.SidedInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemUsage;
 import net.minecraft.item.Items;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -32,11 +31,9 @@ import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
 import net.minecraft.world.World;
-import net.minecraft.world.WorldAccess;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
@@ -75,14 +72,7 @@ public class RitualPedestal extends BlockWithEntity implements Waterloggable {
                 return ItemActionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;
             if (itemStack.isOf(SpiritumItems.SPIRIT_BOTTLE)) {
                 if (pedestal.hasValidRitual() && pedestal.getRitual() == SpiritumRituals.EMPTY) {
-                    if (itemStack.getCount() == 1)
-                        if (!player.isCreative())
-                            player.setStackInHand(hand,new ItemStack(Items.GLASS_BOTTLE));
-                    else {
-                        if (!player.isCreative())
-                            player.giveItemStack(new ItemStack(Items.GLASS_BOTTLE));
-                        itemStack.splitUnlessCreative(1,player);
-                    }
+                    player.setStackInHand(hand, ItemUsage.exchangeStack(stack, player, new ItemStack(Items.GLASS_BOTTLE)));
                     pedestal.setRitual(pedestal.getValidRitual().orElse(null));
                     pedestal.setOwner(player.getUuid());
                     pedestal.getRitual().onApply(pedestal,player.getUuid());
@@ -139,11 +129,11 @@ public class RitualPedestal extends BlockWithEntity implements Waterloggable {
     @Override
     protected void neighborUpdate(BlockState state, World world, BlockPos pos, Block sourceBlock, BlockPos sourcePos, boolean notify) {
         if (world instanceof ServerWorld serverWorld) {
-            this.update(state, serverWorld, pos);
+            this.update(serverWorld, pos);
         }
     }
 
-    public void update(BlockState state, ServerWorld world, BlockPos pos) {
+    public void update(ServerWorld world, BlockPos pos) {
         boolean bl = world.isReceivingRedstonePower(pos);
         BlockEntity blockEntity = world.getBlockEntity(pos);
         if (bl && blockEntity instanceof RitualPedestalEntity pedestal) {

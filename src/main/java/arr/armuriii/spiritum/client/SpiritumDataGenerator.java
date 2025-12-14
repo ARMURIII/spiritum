@@ -1,9 +1,7 @@
 package arr.armuriii.spiritum.client;
 import arr.armuriii.spiritum.Spiritum;
-import arr.armuriii.spiritum.init.SpiritumBlocks;
 import arr.armuriii.spiritum.init.SpiritumEntities;
 import arr.armuriii.spiritum.init.SpiritumPotions;
-import dev.emi.trinkets.api.TrinketsApi;
 import net.fabricmc.fabric.api.datagen.v1.DataGeneratorEntrypoint;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataGenerator;
 import net.fabricmc.fabric.api.datagen.v1.FabricDataOutput;
@@ -24,7 +22,6 @@ import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.registry.tag.EntityTypeTags;
 import net.minecraft.util.Identifier;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -42,6 +39,7 @@ public class SpiritumDataGenerator implements DataGeneratorEntrypoint {
 		pack.addProvider(CraftingGenerator::new);
 		pack.addProvider(LootGenerator::new);
 		pack.addProvider(BlockTagGenerator::new);
+		pack.addProvider(ItemTagGenerator::new);
 		pack.addProvider(EntityTypeTagGenerator::new);
 	}
 
@@ -214,14 +212,16 @@ public class SpiritumDataGenerator implements DataGeneratorEntrypoint {
 				RecipeProvider.offerStonecuttingRecipe(exporter, RecipeCategory.BUILDING_BLOCKS, POLISHED_SILVER_WALL, block);
 			}
 
+			RecipeProvider.offerReversibleCompactingRecipes(exporter,RecipeCategory.MISC,FLESH_CLUMP,RecipeCategory.MISC,FLESH_BLOCK);
+
 			ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, POPPET)
 					.pattern(" w ")
 					.pattern("wfw")
 					.pattern(" w ")
 					.input('w', Items.WHEAT)
-					.input('f', FLESH_CLUMP)
-					.criterion(FabricRecipeProvider.hasItem(FLESH_CLUMP),
-							FabricRecipeProvider.conditionsFromItem(FLESH_CLUMP))
+					.input('f', FLESH_BLOCK)
+					.criterion(FabricRecipeProvider.hasItem(FLESH_BLOCK),
+							FabricRecipeProvider.conditionsFromItem(FLESH_BLOCK))
 					.offerTo(exporter);
 
 			ShapedRecipeJsonBuilder.create(RecipeCategory.TOOLS, SUMMONING_HAT)
@@ -386,6 +386,19 @@ public class SpiritumDataGenerator implements DataGeneratorEntrypoint {
 					.add(POLISHED_SILVER_WALL)
 					.add(POLISHED_HEXSTONE_WALL)
 					.setReplace(false);
+		}
+	}
+	private static class ItemTagGenerator extends FabricTagProvider.ItemTagProvider {
+
+		public ItemTagGenerator(FabricDataOutput output, CompletableFuture<RegistryWrapper.WrapperLookup> registriesFuture) {
+			super(output, registriesFuture);
+		}
+
+		@Override
+		protected void configure(RegistryWrapper.WrapperLookup wrapperLookup) {
+			/*getOrCreateTagBuilder(TagKey.of(Registries.ITEM.getKey(), Identifier.of("enchancement","retains_durability")))
+					.add(SUMMONING_TOKEN)
+					.setReplace(false);*/
 		}
 	}
 	private static class EntityTypeTagGenerator extends FabricTagProvider.EntityTypeTagProvider {

@@ -1,11 +1,11 @@
 {
   "parent": "minecraft:recipes/root",
   "criteria": {
-    "has_flesh_block": {
+    "has_flesh_clump": {
       "conditions": {
         "items": [
           {
-            "items": "spiritum:flesh_block"
+            "items": "spiritum:flesh_clump"
           }
         ]
       },
@@ -13,7 +13,7 @@
     },
     "has_the_recipe": {
       "conditions": {
-        "recipe": "spiritum:poppet"
+        "recipe": "spiritum:flesh_block"
       },
       "trigger": "minecraft:recipe_unlocked"
     }
@@ -21,12 +21,12 @@
   "requirements": [
     [
       "has_the_recipe",
-      "has_flesh_block"
+      "has_flesh_clump"
     ]
   ],
   "rewards": {
     "recipes": [
-      "spiritum:poppet"
+      "spiritum:flesh_block"
     ]
   }
 }

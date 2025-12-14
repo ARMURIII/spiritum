@@ -15,9 +15,9 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Box;
 import net.minecraft.world.World;
 
-import java.util.Arrays;
 import java.util.UUID;
 
+@SuppressWarnings("unused")
 public class SpiritumRituals {
 
     public static final Ritual EMPTY = register(new Ritual(Ritual.Type.INSTANT, Ingredient.empty()),"dummy");
@@ -87,9 +87,8 @@ public class SpiritumRituals {
                         imp.setTamed(true,true);
                         if (owner != null)
                             imp.setOwnerUuid(owner);
-                        else {
+                        else
                             imp.setOwner(world.getClosestPlayer(pedestal.getPos().getX(), pedestal.getPos().getY(), pedestal.getPos().getZ(),16,false));
-                        }
                         if (world instanceof ServerWorld serverWorld)
                             MobSpawningLogic.spawnNearby(serverWorld,pedestal.getPos(),imp,SpiritumEntities.IMP,2,4);
                     }
@@ -97,7 +96,7 @@ public class SpiritumRituals {
                     ItemStack last = pedestal.getStackFromItem(SpiritumItems.SUMMONING_TOKEN).copy();
                     if (last != null) {
                         if (world instanceof ServerWorld serverWorld)
-                            last.damage(1,serverWorld,null,(item)->{});
+                            last.damage(1,serverWorld,null,(reminder)->{});
                         pedestal.replaceItem(SpiritumItems.SUMMONING_TOKEN,last);
                         return true;
                     }

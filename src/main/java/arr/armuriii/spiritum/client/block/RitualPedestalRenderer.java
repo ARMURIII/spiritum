@@ -1,9 +1,6 @@
 package arr.armuriii.spiritum.client.block;
 
-import arr.armuriii.spiritum.Spiritum;
 import arr.armuriii.spiritum.block.entity.RitualPedestalEntity;
-import arr.armuriii.spiritum.client.SpiritumClient;
-import arr.armuriii.spiritum.entity.projectile.SpitProjectileEntity;
 import arr.armuriii.spiritum.init.SpiritumParticles;
 import arr.armuriii.spiritum.init.SpiritumRituals;
 import arr.armuriii.spiritum.rituals.Ritual;
@@ -13,24 +10,19 @@ import net.minecraft.client.render.block.BlockRenderManager;
 import net.minecraft.client.render.block.entity.BlockEntityRenderer;
 import net.minecraft.client.render.block.entity.BlockEntityRendererFactory;
 import net.minecraft.client.render.item.ItemRenderer;
-import net.minecraft.client.render.model.BakedModel;
 import net.minecraft.client.render.model.json.ModelTransformationMode;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.item.ItemStack;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public class RitualPedestalRenderer implements BlockEntityRenderer<RitualPedestalEntity> {
     private final ItemRenderer itemRenderer;
-    private final BlockRenderManager renderManager;
 
     public RitualPedestalRenderer(BlockEntityRendererFactory.Context ctx) {
         this.itemRenderer = ctx.getItemRenderer();
-        renderManager = ctx.getRenderManager();
     }
 
     @Override
@@ -97,12 +89,12 @@ public class RitualPedestalRenderer implements BlockEntityRenderer<RitualPedesta
             matrices.translate(0,
                     height+1,
                     0);
-            if (MinecraftClient.getInstance() != null && tickDelta <= 0.05)
+            /*if (MinecraftClient.getInstance() != null && tickDelta <= 0.05)
                 spawnParticles(5,MinecraftClient.getInstance(),
                         Math.cos(angle+offset)/2+entity.getPos().toCenterPos().x,
                         height+1.75+entity.getPos().toCenterPos().y,
                         Math.sin(angle+offset)/2+entity.getPos().toCenterPos().z
-                );
+                );*/
             matrices.multiply(RotationAxis.POSITIVE_Z.rotation((float) (angle+offset)));
             matrices.multiply(RotationAxis.POSITIVE_Y.rotation((float) (angle+offset)));
             matrices.scale(0.5f,0.5f,0.5f);

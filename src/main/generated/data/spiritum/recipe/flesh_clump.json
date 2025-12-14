@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "misc",
+  "ingredients": [
+    {
+      "item": "spiritum:flesh_block"
+    }
+  ],
+  "result": {
+    "count": 9,
+    "id": "spiritum:flesh_clump"
+  }
+}

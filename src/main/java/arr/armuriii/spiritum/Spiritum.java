@@ -37,6 +37,7 @@ public class Spiritum implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+
 		SpiritumItems.register();
 		SpiritumBlocks.register();
 		SpiritumEntities.register();

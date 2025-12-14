@@ -129,7 +129,7 @@ public class ImpEntity extends TameableEntity implements Angerable,Ownable,Range
     public void tickMovement() {
         super.tickMovement();
         if (this.getWorld() instanceof ServerWorld serverWorld)
-            this.tickAngerLogic(serverWorld, true);
+            this.tickAngerLogic(serverWorld, false);
     }
 
     @Override
@@ -137,6 +137,7 @@ public class ImpEntity extends TameableEntity implements Angerable,Ownable,Range
         return !hasSameOwner(target,owner);
     }
 
+    @SuppressWarnings("unused")
     public boolean hasSameOwner(LivingEntity living) {
         return living instanceof Ownable ownable && ownable.getOwner() != null && ownable.getOwner().getUuid() == getOwnerUuid();
     }
@@ -266,7 +267,7 @@ public class ImpEntity extends TameableEntity implements Angerable,Ownable,Range
         double e = target.getBodyY(1/3f) - spit.getY();
         double f = target.getZ() - this.getZ();
         double g = Math.sqrt(d * d + f * f);
-        spit.setVelocity(d, e + g * (double)0.2F, f, 1.6F, (float)(14 - this.getWorld().getDifficulty().getId() * 4));
+        spit.setVelocity(d, e + g * (double)0.2F, f, 1.2F, (float)(14 - this.getWorld().getDifficulty().getId() * 4));
         this.getWorld().spawnEntity(spit);
         spitting(30);
     }
